@@ -15,16 +15,23 @@ async function throttle() {
 }
 
 async function rpc<T>(url: string, method: string, params: unknown[]): Promise<T> {
-  await throttle();
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": env.TATUM_API_KEY },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  const j = (await res.json()) as { result?: T; error?: { message: string } };
-  if (j.error) throw new Error(`Tatum ${method}: ${j.error.message}`);
-  if (!res.ok) throw new Error(`Tatum ${method}: HTTP ${res.status}`);
-  return j.result as T;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await throttle();
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": env.TATUM_API_KEY },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+    });
+    if (res.status === 429) {
+      await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      continue;
+    }
+    const j = (await res.json()) as { result?: T; error?: { message: string } };
+    if (j.error) throw new Error(`Tatum ${method}: ${j.error.message}`);
+    if (!res.ok) throw new Error(`Tatum ${method}: HTTP ${res.status}`);
+    return j.result as T;
+  }
+  throw new Error(`Tatum ${method}: 429 rate limit exceeded`);
 }
 
 /** Block time of a Polygon transaction, read through Tatum. Null if not found. */
