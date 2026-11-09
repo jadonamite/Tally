@@ -2,7 +2,7 @@
 
 Tally shows you which tipsters actually beat the odds, graded on what they said before kickoff.
 
-Live app: https://tally-eight-pink.vercel.app
+Live app: https://tally.namite.xyz
 
 ## How It Works
 
@@ -14,7 +14,7 @@ Live app: https://tally-eight-pink.vercel.app
 ## Proof
 
 A verified call from the live system:
-- Call page: https://tally-eight-pink.vercel.app/app/call/c_c1ce2f7943a5ba3d
+- Call page: https://tally.namite.xyz/app/call/c_c1ce2f7943a5ba3d
 - Sui seal: https://suiscan.xyz/mainnet/tx/CiLENPQ9LD4kMocSbrTgF3NMUgNANe1eW5G3mWo6HVs4 (checkpoint 343288920, sealed 5m 26s before market kickoff)
 - Walrus call memory: https://walruscan.com/mainnet/blob/Dc_WXFpqO79Epl9d4GAzlJVhpT-6Ahrd67ypFdMuhCg
 - Walrus grade memory: https://walruscan.com/mainnet/blob/vOy2M6HsAuH40JQ9jJJrYIDhSgutlJh-Fgj05HyfzBY

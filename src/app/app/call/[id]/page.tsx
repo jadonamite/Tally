@@ -24,49 +24,51 @@ export default function CallPage({ params }: { params: Promise<{ id: string }> }
   const link = (href: string, text: string) => <a className="text-(--s-act) underline" href={href} target="_blank" rel="noreferrer">{text}</a>;
 
   return (
-    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-4 text-(--s-text)`}>
-      <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub)">Back</Link>
+    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) md:max-w-4xl lg:max-w-5xl md:px-8`}>
+      <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub) hover:text-(--s-text)">← Back to Calls</Link>
       {call && (
         <>
           <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">{call.voiceName}</p>
-          <h1 className="mt-1 text-[22px] font-bold leading-[1.15] tracking-[-0.02em]">{call.question}</h1>
+          <h1 className="mt-1 text-[22px] font-bold leading-[1.15] tracking-[-0.02em] md:text-3xl">{call.question}</h1>
           <p className="mt-2 text-lg font-semibold text-(--s-gold)">{call.outcomeLabel} at {cents(call.entryPrice)}</p>
-          {call.source === "paste" && <blockquote className="mt-4 rounded-[22px] bg-(--s-card) p-4 text-sm leading-relaxed whitespace-pre-wrap">{call.rawText}</blockquote>}
+          {call.source === "paste" && <blockquote className="mt-4 rounded-[22px] bg-(--s-card) p-5 text-sm leading-relaxed whitespace-pre-wrap">{call.rawText}</blockquote>}
 
-          <section className="mt-4 rounded-[22px] bg-(--s-card) px-4">
-            <Row k="Status" v={call.status.toUpperCase()} />
-            <Row k="Market starts" v={utcTime(call.lockAt)} />
-            <Row k={call.sealKind === "polygon" ? "Bought on Polygon" : "Sealed on Sui"} v={call.sealedAt ? utcTime(call.sealedAt) : "pending"} />
-            {call.sealRef && <Row k="Transaction" v={link(call.sealKind === "polygon" ? polygonTxUrl(call.sealRef) : suiTxUrl(call.sealRef), short(call.sealRef))} />}
-            {call.sealCheckpoint && <Row k={call.sealKind === "polygon" ? "Block" : "Checkpoint"} v={call.sealCheckpoint} />}
-            <Row k="Price at the start" v={cents(call.closePrice)} />
-            {call.result && <Row k="Result" v={call.result.toUpperCase()} />}
-            {call.status === "graded" && <Row k="Against the price" v={signedCents(call.beatClose)} />}
-            {call.status === "graded" && <Row k="Profit" v={perDollar(call.pnlPerDollar)} />}
-            {call.memCallBlob && <Row k="Memory (call)" v={link(walrusBlobUrl(call.memCallBlob), short(call.memCallBlob, 4))} />}
-            {call.memGradeBlob && <Row k="Memory (grade)" v={link(walrusBlobUrl(call.memGradeBlob), short(call.memGradeBlob, 4))} />}
-            <Row k="Market" v={link(polymarketUrl(call.marketSlug), "Polymarket")} />
-          </section>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 md:items-start">
+            <section className="rounded-[22px] bg-(--s-card) px-5 py-2">
+              <Row k="Status" v={call.status.toUpperCase()} />
+              <Row k="Market starts" v={utcTime(call.lockAt)} />
+              <Row k={call.sealKind === "polygon" ? "Bought on Polygon" : "Sealed on Sui"} v={call.sealedAt ? utcTime(call.sealedAt) : "pending"} />
+              {call.sealRef && <Row k="Transaction" v={link(call.sealKind === "polygon" ? polygonTxUrl(call.sealRef) : suiTxUrl(call.sealRef), short(call.sealRef))} />}
+              {call.sealCheckpoint && <Row k={call.sealKind === "polygon" ? "Block" : "Checkpoint"} v={call.sealCheckpoint} />}
+              <Row k="Price at the start" v={cents(call.closePrice)} />
+              {call.result && <Row k="Result" v={call.result.toUpperCase()} />}
+              {call.status === "graded" && <Row k="Against the price" v={signedCents(call.beatClose)} />}
+              {call.status === "graded" && <Row k="Profit" v={perDollar(call.pnlPerDollar)} />}
+              {call.memCallBlob && <Row k="Memory (call)" v={link(walrusBlobUrl(call.memCallBlob), short(call.memCallBlob, 4))} />}
+              {call.memGradeBlob && <Row k="Memory (grade)" v={link(walrusBlobUrl(call.memGradeBlob), short(call.memGradeBlob, 4))} />}
+              <Row k="Market" v={link(polymarketUrl(call.marketSlug), "Polymarket")} />
+            </section>
 
-          <section className="mt-4 rounded-[22px] bg-(--s-card) p-4">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">Check it yourself</p>
-            <p className="mt-2 text-xs text-(--s-sub)">This exact text was hashed with SHA-256. The hash is inside the transaction above.</p>
-            <pre className="mt-2 overflow-x-auto rounded-xl bg-(--s-bg) p-3 font-mono text-[11px] leading-relaxed">{call.canonical}</pre>
-            <p className="mt-2 break-all font-mono text-[11px] text-(--s-sub)">sha256 {call.callHash}</p>
-            <button onClick={() => { setChecking(true); api.verify(call.id).then(setCheck).finally(() => setChecking(false)); }}
-              className="mt-3 min-h-11 w-full rounded-full bg-(--s-text) px-5 text-sm font-semibold text-(--s-bg)">
-              {checking ? "Reading the chain through Tatum…" : "Re-check the seal now"}
-            </button>
-            {check && (
-              <ul className="mt-3 space-y-1 font-mono text-xs">
-                <li>hash matches text: {String(check.hashMatches)}</li>
-                {"memoOnChain" in check && <li>hash found on chain: {String(check.memoOnChain)}</li>}
-                <li>chain time: {String(check.chainTime)}</li>
-                <li>before the start: {String(check.beforeStart)}</li>
-                <li>read via: {String(check.readVia)}</li>
-              </ul>
-            )}
-          </section>
+            <section className="rounded-[22px] bg-(--s-card) p-5">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">Check it yourself</p>
+              <p className="mt-2 text-xs leading-relaxed text-(--s-sub)">This exact text was hashed with SHA-256. The hash is inside the transaction above.</p>
+              <pre className="mt-3 overflow-x-auto rounded-xl bg-(--s-bg) p-3 font-mono text-[11px] leading-relaxed">{call.canonical}</pre>
+              <p className="mt-2 break-all font-mono text-[11px] text-(--s-sub)">sha256 {call.callHash}</p>
+              <button onClick={() => { setChecking(true); api.verify(call.id).then(setCheck).finally(() => setChecking(false)); }}
+                className="mt-4 min-h-11 w-full rounded-full bg-(--s-text) px-5 text-sm font-semibold text-(--s-bg) transition-opacity hover:opacity-90">
+                {checking ? "Reading the chain through Tatum…" : "Re-check the seal now"}
+              </button>
+              {check && (
+                <ul className="mt-4 space-y-1 rounded-xl bg-(--s-bg) p-3 font-mono text-xs">
+                  <li>hash matches text: {String(check.hashMatches)}</li>
+                  {"memoOnChain" in check && <li>hash found on chain: {String(check.memoOnChain)}</li>}
+                  <li>chain time: {String(check.chainTime)}</li>
+                  <li>before the start: {String(check.beforeStart)}</li>
+                  <li>read via: {String(check.readVia)}</li>
+                </ul>
+              )}
+            </section>
+          </div>
         </>
       )}
     </main>

@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export function LegalPage({ title, updated, sections }: { title: string; updated: string; sections: Array<{ h: string; p: string[] }> }) {
   return (
-    <main className="app-dark mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-4 text-(--s-text)">
-      <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub)">Back to Tally</Link>
+    <main className="app-dark mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) md:max-w-3xl lg:max-w-4xl md:px-8">
+      <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub) hover:text-(--s-text)">← Back to Tally</Link>
       <h1 className="mt-4 text-[28px] font-bold tracking-[-0.03em]">{title}</h1>
       <p className="mt-1 text-xs text-(--s-sub)">Last updated {updated}</p>
       {sections.map((s) => (
