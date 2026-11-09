@@ -1,0 +1,47 @@
+{
+  "name": "tally",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
+    "sweep": "tsx --env-file=.env.local scripts/sweep-once.ts",
+    "sweep:loop": "tsx --env-file=.env.local scripts/sweep-loop.ts",
+    "spike:tatum": "tsx --env-file=.env.local scripts/spike-tatum.ts",
+    "spike:seal": "tsx --env-file=.env.local scripts/spike-seal.ts",
+    "spike:walrus": "tsx --env-file=.env.local scripts/spike-walrus.ts",
+    "spike:polymarket": "tsx --env-file=.env.local scripts/spike-polymarket.ts",
+    "standings:rebuild": "tsx --env-file=.env.local scripts/rebuild-standings.ts"
+  },
+  "dependencies": {
+    "@mysten-incubation/memwal": "0.1.13",
+    "@mysten/seal": "1.5.4",
+    "@mysten/sui": "2.39.1",
+    "@mysten/walrus": "1.2.39",
+    "@neondatabase/serverless": "1.2.0",
+    "ai": "7.0.165",
+    "clsx": "^2.1.1",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "tailwindcss": "^4",
+    "tsx": "4.23.15",
+    "typescript": "^5",
+    "vitest": "5.1.0"
+  }
+}
