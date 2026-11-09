@@ -24,7 +24,7 @@ export default function CallPage({ params }: { params: Promise<{ id: string }> }
   const link = (href: string, text: string) => <a className="text-(--s-act) underline" href={href} target="_blank" rel="noreferrer">{text}</a>;
 
   return (
-    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) md:max-w-4xl lg:max-w-5xl md:px-8`}>
+    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-7xl bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) sm:px-8 md:px-10`}>
       <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub) hover:text-(--s-text)">← Back to Calls</Link>
       {call && (
         <>

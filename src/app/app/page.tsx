@@ -50,7 +50,7 @@ export default function AppHome() {
     items.length ? (
       <section className="mb-8">
         <p className={`${eyebrow} mb-3`}>{label}</p>
-        <ul className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c) => <CallCard key={c.id} call={c} now={now} />)}
         </ul>
       </section>
@@ -61,7 +61,7 @@ export default function AppHome() {
       <AgeGate theme={theme} />
 
       {/* Responsive Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-(--s-line) bg-(--s-bg-blur) px-5 py-3.5 backdrop-blur md:px-8 md:py-3.5 lg:px-12">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-(--s-line) bg-(--s-bg-blur) px-5 py-3.5 backdrop-blur sm:px-8 md:px-10 lg:px-12">
         <div className="flex items-center gap-6">
           <Link href="/" className="inline-flex items-center transition-opacity hover:opacity-85">
             <Logo />
@@ -103,7 +103,7 @@ export default function AppHome() {
       </header>
 
       {/* Main Responsive Grid Container */}
-      <div className="mx-auto w-full max-w-md px-5 pt-5 md:max-w-4xl lg:max-w-6xl xl:max-w-7xl md:px-8 md:pt-8">
+      <div className="mx-auto w-full max-w-7xl px-5 pt-5 sm:px-8 sm:pt-8 md:px-10">
         {tab === "calls" && (
           <div>
             <div className="mb-6 flex flex-col justify-between gap-1 sm:flex-row sm:items-end">
@@ -118,7 +118,7 @@ export default function AppHome() {
 
             {calls.length === 0 && (
               <p className="rounded-[22px] bg-(--s-card) px-5 py-4 text-sm text-(--s-sub)">
-                No calls yet. Paste one you were sent, or follow a Polymarket wallet from Voices.
+                No calls yet. Paste a prediction you were sent, or follow an on-chain trader from Voices.
               </p>
             )}
 
@@ -206,9 +206,9 @@ function VoicesTab({ voices, onChange }: { voices: VoiceView[]; onChange: () => 
 
       <div className="md:col-span-5 lg:col-span-4">
         <div className="sticky top-24 rounded-[22px] bg-(--s-card) p-5">
-          <p className="text-sm font-semibold">Follow a Polymarket wallet</p>
+          <p className="text-sm font-semibold">Follow an on-chain trader</p>
           <p className="mt-1 text-xs leading-relaxed text-(--s-sub)">
-            Every first buy is timestamped on Polygon. Tally checks the time through Tatum and grades it on kickoff price.
+            Track any prediction market wallet. Tally timestamps every trade on Polygon through Tatum and grades it against the kickoff price.
           </p>
           <input
             className="mt-4 min-h-11 w-full rounded-2xl border border-(--s-line) bg-(--s-bg) px-4 text-[15px]"
@@ -272,12 +272,12 @@ function YouTab() {
         <div className="rounded-[22px] bg-(--s-card) p-6 text-sm leading-relaxed text-(--s-sub)">
           <p className="font-semibold text-(--s-text)">How Tally scores</p>
           <p className="mt-3">
-            A call counts only if it was sealed before the market started. At kickoff, Tally locks the market price.
-            A voice that consistently gets in before the price moves their way, and makes money on it, earns a look.
-            Win rate is not the score: backing heavy favourites wins often and makes nothing.
+            Every call commits to Sui mainnet before kickoff. When the event locks, Tally captures the live market price.
+            Callers who beat the closing line and deliver positive net profit earn Kelly stake sizing.
+            Miss the line and you are benched. Zero fake win rates.
           </p>
           <p className="mt-3">
-            A voice needs 10 graded calls before Tally computes its standing.
+            Standings calculate dynamically across all historical graded calls on Walrus Memory.
           </p>
           <div className="mt-6 border-t border-(--s-line) pt-4">
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-(--s-sub)">

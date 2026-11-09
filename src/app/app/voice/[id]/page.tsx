@@ -27,7 +27,7 @@ export default function VoicePage({ params }: { params: Promise<{ id: string }> 
   const ask = () => { setHits(null); api.recall(id, q).then((r) => setHits(r.hits)).catch(() => setHits([])); };
 
   return (
-    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-md bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) md:max-w-4xl lg:max-w-6xl md:px-8`}>
+    <main className={`${theme === "dark" ? "app-dark" : "app-light"} mx-auto min-h-dvh max-w-7xl bg-(--s-bg) px-5 pb-16 pt-6 text-(--s-text) sm:px-8 md:px-10`}>
       <Link href="/app" className="inline-flex min-h-11 items-center text-sm font-semibold text-(--s-sub) hover:text-(--s-text)">← Back to Calls</Link>
       {voice && (
         <>
@@ -42,7 +42,7 @@ export default function VoicePage({ params }: { params: Promise<{ id: string }> 
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-(--s-sub) tabular-nums">{voice.won} won, {voice.lost} lost. Not the score.</p>
+          <p className="mt-2 text-xs text-(--s-sub) tabular-nums">{voice.won} won, {voice.lost} lost. Edge and profit per dollar determine standing.</p>
 
           <section className="mt-6 rounded-[22px] bg-(--s-card) p-5 md:p-6">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">Tally remembers</p>
