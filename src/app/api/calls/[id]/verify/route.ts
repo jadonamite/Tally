@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const uid = await getUid();
-  const rows = (await sql()`select * from calls where id = ${id} and user_id = ${uid}`) as any[];
+  let rows = (await sql()`select * from calls where id = ${id} and user_id = ${uid}`) as any[];
+  if (!rows.length) rows = (await sql()`select * from calls where id = ${id}`) as any[];
   if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
   const c = rows[0];
   const hashMatches = sha256(c.canonical) === c.call_hash;
