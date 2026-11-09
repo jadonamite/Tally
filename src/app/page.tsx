@@ -1,308 +1,368 @@
 import Link from "next/link";
-import { LandingNav } from "@/components/site/nav";
-import { ReceiptTiles } from "@/components/site/receipt-tiles";
-import { SiteFooter } from "@/components/site/footer";
+import { NavBar } from "@/components/site/nav-bar";
+import { AppFooter } from "@/components/site/app-footer";
+import { HeroStage } from "@/components/landing/hero-stage";
 
-export const metadata = {
-  title: "Tally — Every call on record. Graded at kickoff.",
-  description:
-    "The cryptographic record for sports and prediction markets. Sealed on Sui, archived to Walrus Memory, verified via Tatum gRPC.",
-};
+export const revalidate = 60;
 
-export default function Home() {
+const NAV = [
+  { href: "/app", label: "Board" },
+  { href: "/#scoreboard", label: "Scoreboard" },
+  { href: "/#edge", label: "The Edge" },
+  { href: "/#proof", label: "Receipts" },
+];
+
+const TOP_VOICES = [
+  {
+    id: "v_38337de21ff0bb0a",
+    name: "SineNooneEI",
+    summary: "39 graded calls · +0.05¢ vs price · 24 won, 15 lost",
+    standing: "Earned",
+    metric: "+$0.19",
+    metricSub: "per $1 staked",
+    score: 0.82,
+    control: false,
+  },
+  {
+    id: "v_crypto",
+    name: "Crypto Signals",
+    summary: "9 graded calls · Bitcoin 5m · Checkpoint 343308226",
+    standing: "Sui Sealed",
+    metric: "9 of 9",
+    metricSub: "sealed early",
+    score: 0.55,
+    control: false,
+  },
+  {
+    id: "v_92f1c3ef799e381b",
+    name: "Alpha Trader",
+    summary: "14 graded calls · -5.0¢ line drag · 7 won, 7 lost",
+    standing: "Benched",
+    metric: "-$0.40",
+    metricSub: "loss per $1",
+    score: 0.18,
+    control: true,
+  },
+];
+
+export default function Landing() {
   return (
-    <>
-      <LandingNav />
-
-      <div className="act-light dotgrid dotgrid-light overflow-x-clip">
-        <Hero />
-      </div>
-
-      <div className="dotgrid dotgrid-dark bg-plane">
-        <Callers />
-        <Proof />
-        <HowItWorks />
-        <Close />
-        <SiteFooter />
-      </div>
-    </>
-  );
-}
-
-/* ── Light band ───────────────────────────────────────────────────────────────────── */
-
-function Hero() {
-  return (
-    <section className="relative mx-auto min-h-[42rem] w-full max-w-7xl overflow-hidden px-6 pb-32 pt-28 sm:min-h-[40rem] sm:px-10 sm:pb-36 sm:pt-6 lg:min-h-[44rem] lg:overflow-visible lg:pb-44">
-      <ReceiptTiles />
-
-      <div className="relative z-10 mx-auto max-w-[19rem] text-center sm:max-w-md lg:max-w-2xl">
-        <h1 className="mx-auto text-[clamp(2.2rem,6.4vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.035em] text-ink lg:leading-[0.98]">
-          Every call on record.
-          <br />
-          Graded at kickoff.
-        </h1>
-
-        <p className="mx-auto mt-7 max-w-[27rem] text-[13px] leading-[1.65] text-ink-2">
-          The cryptographic record for sports and prediction markets. We lock the price at
-          kickoff and seal the receipt on Sui. Beat the closing line and you make the board.
-          Miss it and you get benched.
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/app"
-            className="rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-plane transition-opacity hover:opacity-85"
-          >
-            Open the app
-          </Link>
-          <a
-            href="#callers"
-            className="rounded-full border border-edge px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-surface"
-          >
-            See live callers
-          </a>
+    <div className="dotgrid dotgrid-dark flex min-h-screen flex-col bg-plane text-ink">
+      <header className="sticky top-0 z-40 px-4 pt-4">
+        <div className="mx-auto w-full max-w-5xl">
+          <NavBar
+            links={NAV}
+            surface="pill"
+            action={
+              <Link
+                href="/app"
+                className="hidden min-h-[44px] items-center rounded-full bg-lime px-5 text-sm font-medium text-[#0d0d0d] sm:inline-flex"
+              >
+                Open the board
+              </Link>
+            }
+          />
         </div>
-      </div>
-    </section>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="px-4 pt-6 sm:pt-10">
+          <HeroStage />
+          <div className="mx-auto -mt-[2vw] max-w-2xl px-2 text-center">
+            <h1 className="text-[clamp(1.75rem,3.8vw,3rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
+              Grade every market caller before kickoff. Sized with real edge.
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-ink-2">
+              Anyone can claim a winning streak after the final whistle. Tally seals every call on
+              Sui mainnet before the start, anchors it into Walrus Memory, and holds every voice to
+              mathematical proof.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/app"
+                className="inline-flex min-h-[48px] items-center rounded-full bg-lime px-7 font-medium text-[#0d0d0d] transition-opacity hover:opacity-90"
+              >
+                See who&apos;s earned
+              </Link>
+              <Link
+                href="/app"
+                className="inline-flex min-h-[48px] items-center rounded-full border border-edge px-7 font-medium hover:border-ink-3 transition-colors"
+              >
+                Live calls
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Band 1: The Scoreboard */}
+        <Band id="scoreboard">
+          <Kicker>The scoreboard</Kicker>
+          <h2 className="mt-4 max-w-3xl text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
+            Every caller, scored on the events that already happened.
+          </h2>
+          <p className="mt-6 max-w-prose text-[17px] leading-relaxed text-ink-2">
+            Backing heavy favourites at 80 cents looks like an 80% win rate while bleeding money every
+            week. Tally grades closing line value and net profit per dollar, call after call, so
+            you see exactly who beats the price.
+          </p>
+
+          <div className="mt-12 overflow-hidden rounded-2xl border border-rule bg-surface">
+            {TOP_VOICES.map((s, i) => (
+              <Link
+                key={s.id}
+                href={s.id.startsWith("v_") ? `/app/voice/${s.id}` : "/app"}
+                className="grid min-h-[68px] grid-cols-[2rem_1fr_auto] items-center gap-4 border-b border-rule px-5 last:border-b-0 hover:bg-surface-raised sm:grid-cols-[2.5rem_1.4fr_9rem_8rem] sm:px-7 transition-colors"
+              >
+                <span className="font-mono text-sm text-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate font-medium">{s.name}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${
+                        s.standing === "Earned"
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : s.standing === "Sui Sealed"
+                            ? "bg-lime/15 text-lime"
+                            : "bg-rose-500/15 text-rose-400"
+                      }`}
+                    >
+                      {s.standing}
+                    </span>
+                  </span>
+                  <span className="block truncate text-sm text-ink-3 mt-0.5">{s.summary}</span>
+                </span>
+                <span className="hidden sm:block">
+                  <Meter value={s.score} control={s.control} />
+                </span>
+                <span className={`text-right font-mono tnum ${s.control ? "text-ink-3" : "text-ink"}`}>
+                  <span className="font-semibold">{s.metric}</span>
+                  <span className="block text-[10px] text-ink-3">{s.metricSub}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </Band>
+
+        {/* Band 2: The Kickoff Edge */}
+        <Band id="edge">
+          <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.25fr]">
+            <div>
+              <Kicker>The kickoff edge</Kicker>
+              <h2 className="mt-4 text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
+                Markets close. The cryptographic seal doesn&apos;t.
+              </h2>
+              <p className="mt-6 max-w-prose text-[17px] leading-relaxed text-ink-2">
+                Every prediction commits a SHA-256 digest to Sui mainnet before the market locks.
+                Tatum gRPC confirms the block checkpoint before kickoff, locking the time and price
+                in stone.
+              </p>
+              <p className="mt-4 max-w-prose text-[17px] leading-relaxed text-ink-2">
+                When the market settles, Tally pulls the kickoff line. Callers who consistently beat
+                the closing line print real mathematical profit. Those who don&apos;t get benched.
+              </p>
+            </div>
+            <SealTape />
+          </div>
+        </Band>
+
+        {/* Band 3: The Size */}
+        <Band id="size">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]">
+            <FlowBars />
+            <div>
+              <Kicker>The size</Kicker>
+              <h2 className="mt-4 text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
+                A great call, sized for mathematical edge.
+              </h2>
+              <p className="mt-6 max-w-prose text-[17px] leading-relaxed text-ink-2">
+                A voice with edge shouldn&apos;t bet the house, and a voice without edge shouldn&apos;t
+                bet a cent. Tally runs half-Kelly sizing on every earned caller, capped at 2% of
+                bankroll, so you harvest the edge without blowing up.
+              </p>
+              <Link
+                href="/app"
+                className="mt-8 inline-flex min-h-[48px] items-center rounded-full border border-edge px-6 font-medium hover:border-ink-3 transition-colors"
+              >
+                Size a call
+              </Link>
+            </div>
+          </div>
+        </Band>
+
+        {/* Band 4: Built for Truth */}
+        <Band id="proof">
+          <Kicker>Built for verification</Kicker>
+          <h2 className="mt-4 max-w-3xl text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
+            Ask anything. Inspect every receipt on chain.
+          </h2>
+          <div className="mt-8 grid gap-10 lg:grid-cols-2">
+            <p className="max-w-prose text-[17px] leading-relaxed text-ink-2">
+              Every call and grade archives into Walrus Memory as decentralized blobs. Anyone can query
+              a voice&apos;s history using natural language, or verify the exact SHA-256 seal on Sui
+              through Tatum gRPC.
+            </p>
+            <p className="max-w-prose text-[17px] leading-relaxed text-ink-2">
+              Over 350 calls and grades sit on Walrus right now. No deleted tweets, no edited
+              spreadsheets, no post-game excuses. Just unalterable cryptographic truth.
+            </p>
+          </div>
+
+          <pre className="mt-10 overflow-x-auto rounded-2xl border border-rule bg-surface p-6 font-mono text-[13px] leading-relaxed text-ink-2">
+            <span className="text-ink-3">GET</span> <span className="text-ink">/api/calls/c_c1ce2f7943a5ba3d/verify</span>
+            {"\n\n"}
+            {"{\n"}
+            {"  "}<span className="text-lime">&quot;hashMatches&quot;</span>{": true,\n"}
+            {"  "}<span className="text-lime">&quot;memoOnChain&quot;</span>{": true,\n"}
+            {"  "}<span className="text-lime">&quot;beforeStart&quot;</span>{": true,\n"}
+            {"  "}<span className="text-lime">&quot;checkpoint&quot;</span>{": 343308226,\n"}
+            {"  "}<span className="text-lime">&quot;readVia&quot;</span>{": \"Tatum Sui gRPC\"\n"}
+            {"}"}
+          </pre>
+        </Band>
+
+        {/* Closing Callout Stage */}
+        <section className="relative overflow-hidden px-4 py-28 text-center sm:py-36">
+          <p
+            aria-hidden
+            className="stage stage-word stage-word-ghost pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center opacity-80"
+          >
+            Tally
+          </p>
+          <div className="relative">
+            <h2 className="text-[clamp(2.25rem,5vw,4rem)] font-semibold leading-[1] tracking-[-0.04em]">
+              Kickoff is already locked.
+            </h2>
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/app"
+                className="inline-flex min-h-[48px] items-center rounded-full bg-lime px-7 font-medium text-[#0d0d0d] transition-opacity hover:opacity-90"
+              >
+                See who&apos;s earned
+              </Link>
+              <Link
+                href="/app"
+                className="inline-flex min-h-[48px] items-center rounded-full border border-edge px-7 font-medium hover:border-ink-3 transition-colors"
+              >
+                Open the board
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <AppFooter />
+    </div>
   );
 }
-
-/* ── Dark band ────────────────────────────────────────────────────────────────────── */
 
 function Band({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24 py-20 sm:py-28">
-      <div className="mx-auto w-full max-w-7xl px-6 sm:px-10">{children}</div>
+    <section id={id} className="scroll-mt-20 py-24 sm:py-32">
+      <div className="mx-auto w-full max-w-5xl px-6">{children}</div>
     </section>
   );
 }
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
+function Kicker({ children }: { children: React.ReactNode }) {
+  return <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lime">{children}</p>;
+}
+
+function Meter({ value, control }: { value: number; control?: boolean }) {
+  const w = Math.max(0.04, Math.min(1, value));
   return (
-    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-3">{children}</p>
+    <span className="block h-1.5 w-full rounded-full bg-rule">
+      <span
+        className={`block h-full rounded-full ${control ? "bg-ink-3" : "bg-lime"}`}
+        style={{ width: `${w * 100}%` }}
+      />
+    </span>
   );
 }
 
-function Heading({ children, centered = false }: { children: React.ReactNode; centered?: boolean }) {
+/** Graphic showing a sealed call ahead of the kickoff lock and final settlement. */
+function SealTape() {
+  const W = 720;
+  const H = 340;
+  const pad = { l: 20, r: 20, t: 36, b: 50 };
+
   return (
-    <h2
-      className={`mt-5 max-w-3xl text-[clamp(1.9rem,3.6vw,3rem)] font-bold leading-[1.03] tracking-[-0.03em] ${
-        centered ? "mx-auto text-center" : ""
-      }`}
-    >
-      {children}
-    </h2>
+    <figure className="rounded-2xl border border-rule bg-surface p-4 sm:p-6">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Sui seal kickoff line chart">
+        <defs>
+          <pattern id="seal-dots" width="7" height="7" patternUnits="userSpaceOnUse">
+            <circle cx="1.5" cy="1.5" r="0.9" fill="rgba(196, 242, 48, 0.22)" />
+          </pattern>
+        </defs>
+
+        <rect x={pad.l} y={pad.t - 16} width={340} height={H - pad.t - pad.b + 16} fill="url(#seal-dots)" />
+        <line x1={pad.l} x2={W - pad.r} y1={170} y2={170} stroke="var(--ink-3)" strokeDasharray="3 5" />
+        <text x={pad.l + 6} y={160} fill="var(--ink-3)" fontSize="13" fontFamily="var(--font-mono)">
+          Entry price 40¢
+        </text>
+
+        <polyline
+          points="20,210 100,195 200,185 360,150 480,120 600,90 700,60"
+          fill="none"
+          stroke="var(--lime)"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+
+        <line x1={360} x2={360} y1={pad.t - 16} y2={H - pad.b} stroke="var(--ink-2)" strokeWidth="1" strokeDasharray="2 4" />
+        <text x={352} y={pad.t - 2} textAnchor="end" fill="var(--lime)" fontSize="13" fontFamily="var(--font-mono)">
+          Sealed 2m 29s early
+        </text>
+
+        <circle cx={360} cy={150} r="6" fill="var(--lime)" />
+        <text x={360} y={H - pad.b + 20} textAnchor="middle" fill="var(--ink)" fontSize="13" fontFamily="var(--font-mono)">
+          Kickoff line 45¢ (+5¢ edge)
+        </text>
+
+        <circle cx={700} cy={60} r="6" fill="var(--good)" />
+        <text x={700} y={H - pad.b + 20} textAnchor="end" fill="var(--good)" fontSize="13" fontFamily="var(--font-mono)">
+          Settled WON 100¢
+        </text>
+
+        <text x={pad.l} y={H - 8} fill="var(--ink-3)" fontSize="12" fontFamily="var(--font-mono)">
+          Sui Mainnet Checkpoint 343308226 · Tatum gRPC
+        </text>
+      </svg>
+      <figcaption className="mt-3 text-sm text-ink-3">Bitcoin 5m window · Sealed on Sui before market lock.</figcaption>
+    </figure>
   );
 }
 
-const FEATURED = [
-  {
-    name: "SineNooneEI",
-    ground: "bg-tile-vermillion",
-    status: "Earned",
-    metric: "+$0.19",
-    metricLabel: "profit per $1",
-    sub: "+0.05¢ vs price · 24 won, 15 lost",
-    summary: "Consistently beats the closing line across 39 graded calls. Sized with half-Kelly stakes.",
-    href: "/app/voice/v_38337de21ff0bb0a",
-  },
-  {
-    name: "Crypto Signals",
-    ground: "bg-tile-indigo",
-    status: "Sui sealed",
-    metric: "9 of 9",
-    metricLabel: "graded calls",
-    sub: "Bitcoin 5m Up/Down · Checkpoint 343308226",
-    summary: "Sealed on Sui mainnet 2m 29s before lock. Verified through Tatum native gRPC.",
-    href: "/app/call/c_c1ce2f7943a5ba3d",
-  },
-  {
-    name: "Alpha Trader",
-    ground: "bg-tile-chartreuse",
-    status: "Benched",
-    metric: "-$0.40",
-    metricLabel: "loss per $1",
-    sub: "-5.0¢ line drag · 7 won, 7 lost",
-    summary: "Balanced 50% split on 14 calls, but net negative on high-stake positions. Dimmed in the feed.",
-    href: "/app/voice/v_92f1c3ef799e381b",
-  },
-];
+/** Graphic showing 48h call volume and Kelly sizing allocation. */
+function FlowBars() {
+  const W = 720;
+  const H = 320;
+  const heights = [24, 38, 45, 62, 50, 75, 90, 82, 110, 130, 95, 120, 145, 160, 140, 175, 190, 210, 185, 230, 215, 240, 260, 250];
+  const gap = 4;
+  const bw = (W - gap * (heights.length - 1)) / heights.length;
+  const base = H - 44;
 
-function Callers() {
   return (
-    <Band id="callers">
-      <Eyebrow>Live on the board</Eyebrow>
-      <Heading>Three callers on record right now.</Heading>
-
-      <div className="mt-12 grid gap-5 lg:grid-cols-3">
-        {FEATURED.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="group flex flex-col overflow-hidden rounded-[22px] border border-rule bg-surface transition-colors hover:border-edge"
-          >
-            <div className={`relative aspect-[16/10] ${item.ground} p-6 flex flex-col justify-between`}>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white/90">
-                  {item.name}
-                </span>
-                <span className="rounded-full bg-black/25 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
-                  {item.status}
-                </span>
-              </div>
-              <div>
-                <p className="font-mono text-4xl font-semibold tabular-nums text-white">
-                  {item.metric}
-                </p>
-                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/75 mt-1">
-                  {item.metricLabel}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-1 flex-col p-6">
-              <p className="font-mono text-xs text-ink-3 tabular-nums">{item.sub}</p>
-              <p className="mt-3 text-sm leading-relaxed text-ink-2">{item.summary}</p>
-              <p className="mt-auto pt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-accent group-hover:underline">
-                View verified history
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </Band>
-  );
-}
-
-function Proof() {
-  return (
-    <Band id="proof">
-      <div className="grid items-center gap-12 lg:grid-cols-2">
-        <div>
-          <Eyebrow>Where the receipts live</Eyebrow>
-          <Heading>Sui Mainnet. Walrus Memory. Tatum gRPC.</Heading>
-          <p className="mt-6 max-w-prose text-base leading-relaxed text-ink-2">
-            Sub-second verification meets permanent decentralized storage. Every call is
-            hashed and committed to Sui mainnet before kickoff, archived to Walrus Memory,
-            and queried through Tatum gRPC.
-          </p>
-          <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-2">
-            Over 350 calls and grades sit live on Walrus Memory right now. Anyone can
-            audit them with natural language or inspect the raw block sequence on Sui scan.
-          </p>
-          <div className="mt-8 flex gap-4">
-            <Link
-              href="/app"
-              className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-plane transition-opacity hover:opacity-85"
-            >
-              Explore the board
-            </Link>
-            <Link
-              href="/app/call/c_c1ce2f7943a5ba3d"
-              className="rounded-full border border-edge px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-surface"
-            >
-              Inspect live receipt
-            </Link>
-          </div>
-        </div>
-
-        <div className="rounded-[26px] border border-rule bg-surface p-6 font-mono text-xs sm:p-8">
-          <div className="flex items-center justify-between border-b border-rule pb-3">
-            <span className="text-[11px] uppercase tracking-wider text-ink-3">Live On-Chain Seal</span>
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-              CONFIRMED
-            </span>
-          </div>
-
-          <div className="mt-5 space-y-3.5">
-            <div className="flex justify-between border-b border-rule/50 pb-2.5">
-              <span className="text-ink-3">Market</span>
-              <span className="text-right text-ink font-medium">Bitcoin 5m Up/Down</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-2.5">
-              <span className="text-ink-3">Network</span>
-              <span className="text-right text-accent font-medium">Sui Mainnet</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-2.5">
-              <span className="text-ink-3">Checkpoint</span>
-              <span className="text-right text-ink tabular-nums">343308226</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-2.5">
-              <span className="text-ink-3">Kickoff Timing</span>
-              <span className="text-right text-emerald-400 font-medium">Sealed 2m 29s early</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-2.5">
-              <span className="text-ink-3">Read Node</span>
-              <span className="text-right text-ink">Tatum Native gRPC</span>
-            </div>
-            <div className="flex justify-between pt-1">
-              <span className="text-ink-3">Walrus Blob</span>
-              <span className="text-right text-accent truncate max-w-[180px]">MK7SylYh6Pc6t3qP</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Band>
-  );
-}
-
-const STEPS = [
-  {
-    title: "Capture anywhere",
-    body: "Forward a Telegram tip, drop a link from X, or track any on-chain wallet. Tally pulls the prediction and timestamps it immediately.",
-  },
-  {
-    title: "Sealed on Sui",
-    body: "A SHA-256 hash commits to Sui mainnet before kickoff. Tatum gRPC confirms the block checkpoint before the market locks.",
-  },
-  {
-    title: "Walrus Memory",
-    body: "Every call and grade archives into decentralized memory. Natural language recall lets anyone audit a caller's full history.",
-  },
-  {
-    title: "Closing line edge",
-    body: "Graded strictly against the kickoff price and net profit per dollar. Callers with real edge earn half-Kelly stake suggestions.",
-  },
-];
-
-function HowItWorks() {
-  return (
-    <Band id="how">
-      <Eyebrow>How it works</Eyebrow>
-      <Heading>One prediction, sealed early, settled on the numbers.</Heading>
-
-      <ol className="mt-12 grid gap-10 sm:grid-cols-2">
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="border-t border-edge pt-6">
-            <p className="font-mono text-[11px] tabular-nums tracking-[0.2em] text-accent">
-              {String(i + 1).padStart(2, "0")}
-            </p>
-            <h3 className="mt-4 text-2xl font-semibold tracking-tight">{step.title}</h3>
-            <p className="mt-3 max-w-prose text-base leading-relaxed text-ink-2">{step.body}</p>
-          </li>
-        ))}
-      </ol>
-    </Band>
-  );
-}
-
-function Close() {
-  return (
-    <Band>
-      <div className="rounded-[28px] border border-rule bg-surface p-10 text-center sm:p-16">
-        <Heading centered>Check any record right now.</Heading>
-        <p className="mx-auto mt-5 max-w-prose text-base leading-relaxed text-ink-2">
-          Over 350 cryptographic receipts on Sui mainnet and Walrus Memory. Free to query,
-          impossible to fake.
-        </p>
-        <Link
-          href="/app"
-          className="mt-8 inline-block rounded-full bg-ink px-8 py-3.5 text-sm font-medium text-plane transition-opacity hover:opacity-85"
-        >
-          Open the app
-        </Link>
-      </div>
-    </Band>
+    <figure className="rounded-2xl border border-rule bg-surface p-4 sm:p-6">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Kelly stake sizing distribution">
+        {heights.map((h, i) => {
+          const xi = i * (bw + gap);
+          return (
+            <g key={i}>
+              <rect x={xi} y={base - h} width={bw} height={h} rx="1.5" fill="var(--surface-raised)" stroke="var(--rule)" />
+              <rect x={xi} y={base - h * 0.22} width={bw} height={h * 0.22} rx="1.5" fill="var(--lime)" />
+            </g>
+          );
+        })}
+        <line x1="0" x2={W} y1={base} y2={base} stroke="var(--edge)" />
+        <text x="0" y={H - 14} fill="var(--ink-3)" fontSize="13" fontFamily="var(--font-mono)">
+          Calls graded over 48h
+        </text>
+        <text x={W} y={H - 14} textAnchor="end" fill="var(--lime)" fontSize="13" fontFamily="var(--font-mono)">
+          Half-Kelly stake slice (max 2% cap)
+        </text>
+      </svg>
+      <figcaption className="mt-3 text-sm text-ink-3">Mathematical sizing for voices with proven edge.</figcaption>
+    </figure>
   );
 }
