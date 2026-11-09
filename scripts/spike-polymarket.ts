@@ -26,3 +26,6 @@ console.log("history points:", h.history?.length, h.history?.slice(-2));
 // 5. Wallet trades (v2)
 const w = await (await fetch(`https://data-api.polymarket.com/v2/trades?user=0xadb4ce3b18984d24873784bab9af8e76f1f1bc39&limit=3`)).json();
 console.log("trade keys:", Object.keys(w.data?.[0] ?? {}), "pagination:", w.pagination);
+
+export {};
+

@@ -13,3 +13,6 @@ async function rpc(url: string, method: string, params: unknown[]) {
 console.log("SUI checkpoint:", await rpc("https://sui-mainnet.gateway.tatum.io", "sui_getLatestCheckpointSequenceNumber", []));
 console.log("SUI gas price:", await rpc("https://sui-mainnet.gateway.tatum.io", "suix_getReferenceGasPrice", []));
 console.log("POLYGON block:", await rpc("https://polygon-mainnet.gateway.tatum.io", "eth_blockNumber", []));
+
+export {};
+
