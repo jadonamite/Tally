@@ -2,7 +2,7 @@ import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { env } from "./env";
 
 export const TATUM_SUI_JSONRPC = "https://sui-mainnet.gateway.tatum.io";
-const TATUM_SUI_GRPC = "https://sui-mainnet-grpc.gateway.tatum.io";
+const TATUM_SUI_GRPC_HOST = "sui-mainnet-grpc.gateway.tatum.io:443";
 const TATUM_POLYGON = "https://polygon-mainnet.gateway.tatum.io";
 
 // Free plan is 3 requests per second. Space calls 350 ms apart within one process.
@@ -46,7 +46,14 @@ export interface SuiTxRead {
 export async function suiTxRead(digest: string): Promise<SuiTxRead> {
   if (env.TATUM_SUI_READ === "grpcweb") {
     await throttle();
-    const client = new SuiGrpcClient({ network: "mainnet", baseUrl: TATUM_SUI_GRPC, meta: { "x-api-key": env.TATUM_API_KEY } } as never);
+    const { GrpcTransport } = await import("@protobuf-ts/grpc-transport");
+    const grpc = await import("@grpc/grpc-js");
+    const transport = new GrpcTransport({
+      host: TATUM_SUI_GRPC_HOST,
+      channelCredentials: grpc.credentials.createSsl(),
+      meta: { "x-api-key": env.TATUM_API_KEY },
+    });
+    const client = new SuiGrpcClient({ network: "mainnet", transport });
     const r = (await client.getTransaction({ digest, include: { effects: true, transaction: true } })) as any;
     const t = r.Transaction ?? r;
     const inputs = t.transaction?.inputs ?? [];
