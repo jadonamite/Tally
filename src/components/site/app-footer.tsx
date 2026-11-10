@@ -17,6 +17,7 @@ export function AppFooter() {
             { href: "/terms", label: "Terms" },
             { href: "/privacy", label: "Privacy" },
             { href: "/cookies", label: "Cookies" },
+            { href: "/blog", label: "Blog" },
             { href: "https://github.com/jadonamite/Tally", label: "GitHub" },
           ].map((link) =>
             link.href.startsWith("http") ? (
