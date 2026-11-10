@@ -2,6 +2,8 @@ import Link from "next/link";
 import { NavBar } from "@/components/site/nav-bar";
 import { AppFooter } from "@/components/site/app-footer";
 import { HeroStage } from "@/components/landing/hero-stage";
+import { landingData, type LandingProof, type LandingVoice } from "@/server/landingData";
+import { signedCents, perDollar, cents, STANDING_LABEL } from "@/lib/format";
 
 export const revalidate = 60;
 
@@ -12,40 +14,9 @@ const NAV = [
   { href: "/#proof", label: "Receipts" },
 ];
 
-const TOP_VOICES = [
-  {
-    id: "v_38337de21ff0bb0a",
-    name: "SineNooneEI",
-    summary: "39 graded calls · +0.05¢ vs price · 24 won, 15 lost",
-    standing: "Earned",
-    metric: "+$0.19",
-    metricSub: "per $1 staked",
-    score: 0.82,
-    control: false,
-  },
-  {
-    id: "v_crypto",
-    name: "Crypto Signals",
-    summary: "9 graded calls · Bitcoin 5m · Checkpoint 343308226",
-    standing: "Sui Sealed",
-    metric: "9 of 9",
-    metricSub: "sealed early",
-    score: 0.55,
-    control: false,
-  },
-  {
-    id: "v_92f1c3ef799e381b",
-    name: "Alpha Trader",
-    summary: "14 graded calls · -5.0¢ line drag · 7 won, 7 lost",
-    standing: "Benched",
-    metric: "-$0.40",
-    metricSub: "loss per $1",
-    score: 0.18,
-    control: true,
-  },
-];
+export default async function Landing() {
+  const { voices, tiles, proof, counts } = await landingData();
 
-export default function Landing() {
   return (
     <div className="dotgrid dotgrid-dark flex min-h-screen flex-col bg-plane text-ink">
       <header className="sticky top-0 z-40 px-4 pt-4">
@@ -68,7 +39,7 @@ export default function Landing() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="px-4 pt-6 sm:pt-10">
-          <HeroStage />
+          <HeroStage tiles={tiles} />
           <div className="mx-auto -mt-[2vw] max-w-2xl px-2 text-center">
             <h1 className="text-[clamp(1.75rem,3.8vw,3rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
               Grade every market caller before kickoff. Sized with real edge.
@@ -108,39 +79,56 @@ export default function Landing() {
           </p>
 
           <div className="mt-12 overflow-hidden rounded-2xl border border-rule bg-surface">
-            {TOP_VOICES.map((s, i) => (
-              <Link
-                key={s.id}
-                href={s.id.startsWith("v_") ? `/app/voice/${s.id}` : "/app"}
-                className="grid min-h-[68px] grid-cols-[2rem_1fr_auto] items-center gap-4 border-b border-rule px-5 last:border-b-0 hover:bg-surface-raised sm:grid-cols-[2.5rem_1.4fr_9rem_8rem] sm:px-7 transition-colors"
-              >
-                <span className="font-mono text-sm text-ink-3">{String(i + 1).padStart(2, "0")}</span>
-                <span className="min-w-0">
-                  <span className="flex items-center gap-2">
-                    <span className="truncate font-medium">{s.name}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${
-                        s.standing === "Earned"
-                          ? "bg-emerald-500/15 text-emerald-400"
-                          : s.standing === "Sui Sealed"
-                            ? "bg-lime/15 text-lime"
-                            : "bg-rose-500/15 text-rose-400"
-                      }`}
-                    >
-                      {s.standing}
+            {voices.map((v, i) => {
+              const standingLabel = STANDING_LABEL[v.standing] ?? v.standing;
+              const clv = v.meanBeatClose !== null ? `${signedCents(v.meanBeatClose)} vs price · ` : "";
+              const summary = `${v.n} graded calls · ${clv}${v.won} won, ${v.lost} lost`;
+              const metric = v.pnlPerBet !== null ? perDollar(v.pnlPerBet).replace(" per $1", "") : "--";
+              const isEarned = v.standing === "earned";
+              return (
+                <Link
+                  key={v.id}
+                  href={`/app/voice/${v.id}`}
+                  className="grid min-h-[68px] grid-cols-[2rem_1fr_auto] items-center gap-4 border-b border-rule px-5 last:border-b-0 hover:bg-surface-raised sm:grid-cols-[2.5rem_1.4fr_9rem_8rem] sm:px-7 transition-colors"
+                >
+                  <span className="font-mono text-sm text-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-2">
+                      {v.avatar ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={v.avatar}
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 rounded-full object-cover shrink-0"
+                        />
+                      ) : null}
+                      <span className="truncate font-medium">{v.displayName}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${
+                          isEarned
+                            ? "bg-good/15 text-good"
+                            : v.standing === "unproven"
+                              ? "bg-lime/15 text-lime"
+                              : "bg-critical/15 text-critical"
+                        }`}
+                      >
+                        {standingLabel}
+                      </span>
                     </span>
+                    <span className="block truncate text-sm text-ink-3 mt-0.5">{summary}</span>
                   </span>
-                  <span className="block truncate text-sm text-ink-3 mt-0.5">{s.summary}</span>
-                </span>
-                <span className="hidden sm:block">
-                  <Meter value={s.score} control={s.control} />
-                </span>
-                <span className={`text-right font-mono tnum ${s.control ? "text-ink-3" : "text-ink"}`}>
-                  <span className="font-semibold">{s.metric}</span>
-                  <span className="block text-[10px] text-ink-3">{s.metricSub}</span>
-                </span>
-              </Link>
-            ))}
+                  <span className="hidden sm:block">
+                    <Meter value={isEarned ? 0.82 : v.standing === "unproven" ? 0.55 : 0.18} control={!isEarned} />
+                  </span>
+                  <span className={`text-right font-mono tnum ${!isEarned ? "text-ink-3" : "text-ink"}`}>
+                    <span className="font-semibold">{metric}</span>
+                    <span className="block text-[10px] text-ink-3">per $1 staked</span>
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </Band>
 
@@ -162,14 +150,14 @@ export default function Landing() {
                 the closing line print real mathematical profit. Those who don&apos;t get benched.
               </p>
             </div>
-            <SealTape />
+            <SealTape proof={proof} />
           </div>
         </Band>
 
         {/* Band 3: The Size */}
         <Band id="size">
           <div className="grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]">
-            <FlowBars />
+            <FlowBars voices={voices} />
             <div>
               <Kicker>The size</Kicker>
               <h2 className="mt-4 text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
@@ -203,20 +191,30 @@ export default function Landing() {
               through Tatum gRPC.
             </p>
             <p className="max-w-prose text-[17px] leading-relaxed text-ink-2">
-              Over 350 calls and grades sit on Walrus right now. No deleted tweets, no edited
-              spreadsheets, no post-game excuses. Just unalterable cryptographic truth.
+              {counts.memories !== null && counts.namespaces !== null ? (
+                <>
+                  Over {counts.memories.toLocaleString()} decentralized memories across {counts.namespaces} namespaces sit on Walrus right now. No deleted tweets, no edited spreadsheets, no post-game excuses. Just unalterable cryptographic truth.
+                </>
+              ) : (
+                <>
+                  Decentralized memories sit on Walrus right now. No deleted tweets, no edited spreadsheets, no post-game excuses. Just unalterable cryptographic truth.
+                </>
+              )}
             </p>
           </div>
 
           <pre className="mt-10 overflow-x-auto rounded-2xl border border-rule bg-surface p-6 font-mono text-[13px] leading-relaxed text-ink-2">
-            <span className="text-ink-3">GET</span> <span className="text-ink">/api/calls/c_c1ce2f7943a5ba3d/verify</span>
+            <span className="text-ink-3">GET</span> <span className="text-ink">/api/calls/{proof?.id ?? "c_16b938747ad3bb62"}/verify</span>
             {"\n\n"}
             {"{\n"}
             {"  "}<span className="text-lime">&quot;hashMatches&quot;</span>{": true,\n"}
+            {"  "}<span className="text-lime">&quot;chain&quot;</span>{": \"sui\",\n"}
+            {"  "}<span className="text-lime">&quot;success&quot;</span>{": true,\n"}
             {"  "}<span className="text-lime">&quot;memoOnChain&quot;</span>{": true,\n"}
+            {"  "}<span className="text-lime">&quot;chainTime&quot;</span>{`: ${JSON.stringify(proof?.sealedAt ?? "2026-11-09T09:09:09.146Z")},\n`}
             {"  "}<span className="text-lime">&quot;beforeStart&quot;</span>{": true,\n"}
-            {"  "}<span className="text-lime">&quot;checkpoint&quot;</span>{": 343308226,\n"}
-            {"  "}<span className="text-lime">&quot;readVia&quot;</span>{": \"Tatum Sui gRPC\"\n"}
+            {"  "}<span className="text-lime">&quot;checkpoint&quot;</span>{`: ${JSON.stringify(proof?.sealCheckpoint ?? "343308632")},\n`}
+            {"  "}<span className="text-lime">&quot;readVia&quot;</span>{": \"Tatum\"\n"}
             {"}"}
           </pre>
         </Band>
@@ -258,7 +256,7 @@ export default function Landing() {
 
 function Band({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-20 py-24 sm:py-32">
+    <section id={id} className="scroll-mt-28 py-24 sm:scroll-mt-36 sm:py-32">
       <div className="mx-auto w-full max-w-5xl px-6">{children}</div>
     </section>
   );
@@ -281,10 +279,40 @@ function Meter({ value, control }: { value: number; control?: boolean }) {
 }
 
 /** Graphic showing a sealed call ahead of the kickoff lock and final settlement. */
-function SealTape() {
+function SealTape({ proof }: { proof: LandingProof | null }) {
   const W = 720;
   const H = 340;
   const pad = { l: 20, r: 20, t: 36, b: 50 };
+
+  if (!proof) {
+    return (
+      <figure className="rounded-2xl border border-rule bg-surface p-4 sm:p-6 flex items-center justify-center min-h-[340px]">
+        <p className="font-mono text-sm text-ink-3">Seals confirm on Sui mainnet before market lock.</p>
+      </figure>
+    );
+  }
+
+  const entry = proof.entryPrice ?? 0.5;
+  const close = proof.closePrice ?? entry;
+  const edge = close - entry;
+  const isWon = proof.result === "won";
+  const isLost = proof.result === "lost";
+
+  const earlySeconds = Math.max(
+    0,
+    Math.round((new Date(proof.lockAt).getTime() - new Date(proof.sealedAt).getTime()) / 1000)
+  );
+  const earlyLabel =
+    earlySeconds >= 60
+      ? `${Math.floor(earlySeconds / 60)}m ${earlySeconds % 60}s early`
+      : `${earlySeconds}s early`;
+
+  const priceToY = (p: number) => Math.round(260 - Math.min(Math.max(p, 0), 1) * 200);
+  const entryY = priceToY(entry);
+  const closeY = priceToY(close);
+  const settleY = isWon ? 60 : isLost ? 260 : 160;
+
+  const edgeLabel = `${signedCents(edge)} edge`;
 
   return (
     <figure className="rounded-2xl border border-rule bg-surface p-4 sm:p-6">
@@ -296,13 +324,13 @@ function SealTape() {
         </defs>
 
         <rect x={pad.l} y={pad.t - 16} width={340} height={H - pad.t - pad.b + 16} fill="url(#seal-dots)" />
-        <line x1={pad.l} x2={W - pad.r} y1={170} y2={170} stroke="var(--ink-3)" strokeDasharray="3 5" />
-        <text x={pad.l + 6} y={160} fill="var(--ink-3)" fontSize="13" fontFamily="var(--font-mono)">
-          Entry price 40¢
+        <line x1={pad.l} x2={W - pad.r} y1={entryY} y2={entryY} stroke="var(--ink-3)" strokeDasharray="3 5" />
+        <text x={pad.l + 6} y={entryY - 10} fill="var(--ink-3)" fontSize="13" fontFamily="var(--font-mono)">
+          Entry price {cents(entry)}
         </text>
 
         <polyline
-          points="20,210 100,195 200,185 360,150 480,120 600,90 700,60"
+          points={`${pad.l},${entryY} 100,${entryY} 200,${Math.round((entryY + closeY) / 2)} 360,${closeY} 480,${Math.round((closeY + settleY) / 2)} 600,${Math.round((closeY + settleY * 2) / 3)} 700,${settleY}`}
           fill="none"
           stroke="var(--lime)"
           strokeWidth="2.5"
@@ -311,54 +339,122 @@ function SealTape() {
 
         <line x1={360} x2={360} y1={pad.t - 16} y2={H - pad.b} stroke="var(--ink-2)" strokeWidth="1" strokeDasharray="2 4" />
         <text x={352} y={pad.t - 2} textAnchor="end" fill="var(--lime)" fontSize="13" fontFamily="var(--font-mono)">
-          Sealed 2m 29s early
+          Sealed {earlyLabel}
         </text>
 
-        <circle cx={360} cy={150} r="6" fill="var(--lime)" />
+        <circle cx={360} cy={closeY} r="6" fill="var(--lime)" />
         <text x={360} y={H - pad.b + 20} textAnchor="middle" fill="var(--ink)" fontSize="13" fontFamily="var(--font-mono)">
-          Kickoff line 45¢ (+5¢ edge)
+          Kickoff line {cents(close)} ({edgeLabel})
         </text>
 
-        <circle cx={700} cy={60} r="6" fill="var(--good)" />
-        <text x={700} y={H - pad.b + 20} textAnchor="end" fill="var(--good)" fontSize="13" fontFamily="var(--font-mono)">
-          Settled WON 100¢
+        <circle cx={700} cy={settleY} r="6" fill={isWon ? "var(--good)" : "var(--critical)"} />
+        <text
+          x={700}
+          y={H - pad.b + 20}
+          textAnchor="end"
+          fill={isWon ? "var(--good)" : "var(--critical)"}
+          fontSize="13"
+          fontFamily="var(--font-mono)"
+        >
+          Settled {isWon ? "WON 100¢" : isLost ? "LOST 0¢" : proof.result?.toUpperCase() ?? "SETTLED"}
         </text>
 
         <text x={pad.l} y={H - 8} fill="var(--ink-3)" fontSize="12" fontFamily="var(--font-mono)">
-          Sui Mainnet Checkpoint 343308226 · Tatum gRPC
+          Sui Mainnet Checkpoint {proof.sealCheckpoint ?? "–"} · Tatum gRPC
         </text>
       </svg>
-      <figcaption className="mt-3 text-sm text-ink-3">Bitcoin 5m window · Sealed on Sui before market lock.</figcaption>
+      <figcaption className="mt-3 text-sm text-ink-3">
+        {proof.question ? `${proof.question} · ` : ""}Sealed on Sui before market lock.
+      </figcaption>
     </figure>
   );
 }
 
-/** Graphic showing 48h call volume and Kelly sizing allocation. */
-function FlowBars() {
+/** Graphic showing graded calls per voice and Kelly sizing allocation. */
+function FlowBars({ voices }: { voices: LandingVoice[] }) {
   const W = 720;
   const H = 320;
-  const heights = [24, 38, 45, 62, 50, 75, 90, 82, 110, 130, 95, 120, 145, 160, 140, 175, 190, 210, 185, 230, 215, 240, 260, 250];
-  const gap = 4;
-  const bw = (W - gap * (heights.length - 1)) / heights.length;
-  const base = H - 44;
+  const base = H - 48;
+  const pad = 24;
+
+  const active = voices.filter((v) => v.n > 0);
+  const displayVoices = active.length > 0 ? active : voices;
+  const maxN = Math.max(...displayVoices.map((v) => v.n), 1);
+  const count = displayVoices.length;
+  const gap = count > 1 ? Math.min(32, Math.floor((W - pad * 2) / (count * 4))) : 0;
+  const bw = Math.min(72, Math.floor((W - pad * 2 - gap * (count - 1)) / count));
+  const totalW = bw * count + gap * (count - 1);
+  const startX = Math.floor((W - totalW) / 2);
 
   return (
     <figure className="rounded-2xl border border-rule bg-surface p-4 sm:p-6">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Kelly stake sizing distribution">
-        {heights.map((h, i) => {
-          const xi = i * (bw + gap);
+        {displayVoices.map((v, i) => {
+          const xi = startX + i * (bw + gap);
+          const barH = Math.max(16, Math.round((v.n / maxN) * 180));
+          const hasEdge = (v.pnlPerBet ?? 0) > 0;
+          const stakeRatio = hasEdge ? Math.min(1, Math.max(0.18, (v.pnlPerBet ?? 0) * 1.5)) : 0;
+          const sliceH = Math.round(barH * stakeRatio);
+
           return (
-            <g key={i}>
-              <rect x={xi} y={base - h} width={bw} height={h} rx="1.5" fill="var(--surface-raised)" stroke="var(--rule)" />
-              <rect x={xi} y={base - h * 0.22} width={bw} height={h * 0.22} rx="1.5" fill="var(--lime)" />
+            <g key={v.id}>
+              <rect
+                x={xi}
+                y={base - barH}
+                width={bw}
+                height={barH}
+                rx="3"
+                fill="var(--surface-raised)"
+                stroke="var(--rule)"
+              />
+              {sliceH > 0 && (
+                <rect
+                  x={xi}
+                  y={base - sliceH}
+                  width={bw}
+                  height={sliceH}
+                  rx="3"
+                  fill="var(--lime)"
+                />
+              )}
+              <text
+                x={xi + bw / 2}
+                y={base - barH - 8}
+                textAnchor="middle"
+                fill={hasEdge ? "var(--lime)" : "var(--ink-3)"}
+                fontSize="11"
+                fontFamily="var(--font-mono)"
+              >
+                {v.pnlPerBet !== null ? perDollar(v.pnlPerBet).replace(" per $1", "") : "–"}
+              </text>
+              <text
+                x={xi + bw / 2}
+                y={base + 16}
+                textAnchor="middle"
+                fill="var(--ink)"
+                fontSize="11"
+                fontFamily="var(--font-mono)"
+              >
+                {v.displayName.length > 10 ? `${v.displayName.slice(0, 9)}…` : v.displayName}
+              </text>
+              <text
+                x={xi + bw / 2}
+                y={base + 30}
+                textAnchor="middle"
+                fill="var(--ink-3)"
+                fontSize="10"
+                fontFamily="var(--font-mono)"
+              >
+                {v.n} calls
+              </text>
             </g>
           );
         })}
         <line x1="0" x2={W} y1={base} y2={base} stroke="var(--edge)" />
-        <text x="0" y={H - 14} fill="var(--ink-3)" fontSize="13" fontFamily="var(--font-mono)">
-          Calls graded over 48h
+        <text x="0" y={H - 6} fill="var(--ink-3)" fontSize="11" fontFamily="var(--font-mono)">
+          Calls graded per voice
         </text>
-        <text x={W} y={H - 14} textAnchor="end" fill="var(--lime)" fontSize="13" fontFamily="var(--font-mono)">
+        <text x={W} y={H - 6} textAnchor="end" fill="var(--lime)" fontSize="11" fontFamily="var(--font-mono)">
           Half-Kelly stake slice (max 2% cap)
         </text>
       </svg>

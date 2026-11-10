@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import type { LandingTile } from "@/server/landingData";
 
 /** Stage coordinates. The SVG paths and the tile positions share this box. */
 const W = 1600;
@@ -13,31 +14,46 @@ const PATHS = [
   "M 40 360 C 220 300, 400 380, 560 470",
 ];
 
-const TILES = [
-  { id: "sine", name: "SineNooneEI", stat: "+19¢", label: "per $1", path: 0, start: 0.06, tilt: -12, href: "/app/voice/v_38337de21ff0bb0a" },
-  { id: "crypto", name: "Crypto Signals", stat: "343M", label: "Sui ckpt", path: 0, start: 0.42, tilt: 9, href: "/app/call/c_c1ce2f7943a5ba3d" },
-  { id: "walrus", name: "Walrus", stat: "355+", label: "blobs", path: 0, start: 0.78, tilt: -6, href: "/app" },
-  { id: "alpha", name: "Alpha Trader", stat: "-40¢", label: "per $1", path: 1, start: 0.3, tilt: 14, href: "/app/voice/v_92f1c3ef799e381b" },
-  { id: "tatum", name: "Tatum gRPC", stat: "0.2s", label: "read", path: 1, start: 0.62, tilt: -10, href: "/app" },
-  { id: "btc", name: "BTC 5m", stat: "UP", label: "sealed", path: 1, start: 0.94, tilt: 7, href: "/app" },
-  { id: "edge", name: "Kickoff Edge", stat: "+0.05¢", label: "vs close", path: 2, start: 0.2, tilt: -16, href: "/app" },
-  { id: "kelly", name: "Kelly", stat: "2%", label: "max cap", path: 2, start: 0.72, tilt: 11, href: "/app" },
+const SLOTS = [
+  { path: 0, start: 0.06, tilt: -12 },
+  { path: 0, start: 0.42, tilt: 9 },
+  { path: 0, start: 0.78, tilt: -6 },
+  { path: 1, start: 0.3, tilt: 14 },
+  { path: 1, start: 0.62, tilt: -10 },
+  { path: 1, start: 0.94, tilt: 7 },
+  { path: 2, start: 0.2, tilt: -16 },
+  { path: 2, start: 0.72, tilt: 11 },
 ];
 
 const LAP_S = 46;
 
-export function HeroStage() {
+export interface HeroStageProps {
+  tiles?: LandingTile[];
+}
+
+export function HeroStage({ tiles = [] }: HeroStageProps) {
   const stage = useRef<HTMLDivElement>(null);
   const paths = useRef<(SVGPathElement | null)[]>([]);
-  const tiles = useRef<(HTMLAnchorElement | null)[]>([]);
-  const paused = useRef<boolean[]>(TILES.map(() => false));
+  const tileRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const paused = useRef<boolean[]>([]);
+
+  const activeTiles = useMemo(
+    () =>
+      tiles.slice(0, SLOTS.length).map((t, i) => ({
+        ...t,
+        ...SLOTS[i],
+      })),
+    [tiles],
+  );
 
   useEffect(() => {
+    paused.current = activeTiles.map(() => false);
     const box = stage.current;
-    if (!box) return;
+    if (!box || activeTiles.length === 0) return;
+
     const lengths = paths.current.map((p) => p?.getTotalLength() ?? 0);
     const longest = Math.max(...lengths);
-    const progress = TILES.map((t) => t.start);
+    const progress = activeTiles.map((t) => t.start);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let size = { w: box.clientWidth, h: box.clientHeight };
     const ro = new ResizeObserver(() => {
@@ -50,11 +66,12 @@ export function HeroStage() {
     let raf = 0;
 
     function place(dt: number) {
-      TILES.forEach((tile, i) => {
-        const el = tiles.current[i];
+      activeTiles.forEach((tile, i) => {
+        const el = tileRefs.current[i];
         const path = paths.current[tile.path];
         if (!el || !path) return;
         const len = lengths[tile.path];
+        if (!len) return;
         if (!paused.current[i]) progress[i] = (progress[i] + (dt / LAP_S) * (longest / len)) % 1;
         const t = progress[i];
         const pt = path.getPointAtLength(t * len);
@@ -84,7 +101,7 @@ export function HeroStage() {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, []);
+  }, [activeTiles]);
 
   return (
     <div ref={stage} className="stage relative mx-auto aspect-square sm:aspect-[16/9.5] w-full max-w-[1500px] overflow-hidden">
@@ -143,29 +160,35 @@ export function HeroStage() {
       })}
 
       <div aria-hidden className="absolute inset-0">
-        {TILES.map((tile, i) => (
-          <Link
-            key={tile.id}
-            href={tile.href}
-            tabIndex={-1}
-            ref={(el) => {
-              tiles.current[i] = el;
-            }}
-            onPointerEnter={() => (paused.current[i] = true)}
-            onPointerLeave={() => (paused.current[i] = false)}
-            className="stage-tile absolute left-0 top-0 z-[2] flex flex-col items-center justify-center p-2 text-center opacity-0 transition-[background-color] duration-200"
-          >
-            <span className="font-mono text-[9px] uppercase tracking-wider text-ink-3 truncate max-w-full">
-              {tile.name}
-            </span>
-            <span className="font-mono text-xs sm:text-sm font-bold text-lime mt-0.5">
-              {tile.stat}
-            </span>
-            <span className="font-mono text-[8px] uppercase tracking-widest text-ink-3">
-              {tile.label}
-            </span>
-          </Link>
-        ))}
+        {activeTiles.map((tile, i) => {
+          const status = tile.result ? ` · ${tile.result}` : "";
+          const line = `${tile.outcomeLabel}${status}`;
+          return (
+            <Link
+              key={tile.id}
+              href={`/app/call/${tile.id}`}
+              tabIndex={-1}
+              ref={(el) => {
+                tileRefs.current[i] = el;
+              }}
+              onPointerEnter={() => (paused.current[i] = true)}
+              onPointerLeave={() => (paused.current[i] = false)}
+              className="stage-tile absolute left-0 top-0 z-[2] flex flex-col items-center justify-center p-1 text-center opacity-0 transition-[background-color] duration-200"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={tile.image}
+                alt={tile.question}
+                width={128}
+                height={128}
+                className="h-[56%] w-[56%] rounded-full object-cover shadow-[0_4px_12px_-4px_rgba(0,0,0,0.4)]"
+              />
+              <span className="mt-1 block max-w-[92%] truncate font-mono text-[9px] font-medium tracking-tight text-ink-2">
+                {line}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

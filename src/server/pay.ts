@@ -1,7 +1,6 @@
 import { normalizeSuiAddress } from "@mysten/sui/utils";
 import { sql } from "./db";
 import { env } from "./env";
-import { TATUM_SUI_JSONRPC } from "./tatum";
 
 /**
  * Native Circle USDC coin type on Sui mainnet.
