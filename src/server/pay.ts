@@ -264,51 +264,35 @@ async function throttleTatum() {
  * with showBalanceChanges: true, showEffects: true, showInput: true.
  */
 export async function readSuiTxWithBalanceChanges(digest: string): Promise<SuiTxBlockResponse | null> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await throttleTatum();
-    const res = await fetch(TATUM_SUI_JSONRPC, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": env.TATUM_API_KEY,
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "sui_getTransactionBlock",
-        params: [
-          digest,
-          {
-            showInput: true,
-            showEffects: true,
-            showBalanceChanges: true,
-          },
-        ],
-      }),
-    });
-
-    if (res.status === 429) {
-      await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
-      continue;
-    }
-
-    if (!res.ok) {
-      throw new Error(`Tatum sui_getTransactionBlock: HTTP ${res.status}`);
-    }
-
-    const j = (await res.json()) as { result?: SuiTxBlockResponse; error?: { message: string } };
-    if (j.error) {
-      const msg = j.error.message || "";
-      if (msg.includes("Could not find") || msg.includes("not found")) {
-        return null;
-      }
-      throw new Error(`Tatum sui_getTransactionBlock: ${msg}`);
-    }
-
-    return j.result ?? null;
+  await throttleTatum();
+  const { SuiGrpcClient } = await import("@mysten/sui/grpc");
+  const { GrpcTransport } = await import("@protobuf-ts/grpc-transport");
+  const grpc = await import("@grpc/grpc-js");
+  const transport = new GrpcTransport({
+    host: "sui-mainnet-grpc.gateway.tatum.io:443",
+    channelCredentials: grpc.credentials.createSsl(),
+    meta: { "x-api-key": env.TATUM_API_KEY },
+  });
+  const client = new SuiGrpcClient({ network: "mainnet", transport });
+  let r: any;
+  try {
+    r = await client.getTransaction({ digest, include: { effects: true, transaction: true, balanceChanges: true } });
+  } catch (e) {
+    if (/not found/i.test(String(e))) return null;
+    throw e;
   }
-
-  throw new Error("Tatum sui_getTransactionBlock: rate limit exceeded");
+  const t = r.Transaction ?? r;
+  return {
+    digest: t.digest ?? digest,
+    timestampMs: t.timestampMs ?? null,
+    effects: { status: { status: t.status?.success === true ? "success" : "failure" } },
+    transaction: { data: { sender: t.transaction?.sender } },
+    balanceChanges: (t.balanceChanges ?? []).map((b: any) => ({
+      owner: b.address ?? b.owner,
+      coinType: b.coinType,
+      amount: String(b.amount),
+    })),
+  };
 }
 
 /**

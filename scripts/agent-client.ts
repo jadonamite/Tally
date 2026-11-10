@@ -1,6 +1,6 @@
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction, coinWithBalance } from "@mysten/sui/transactions";
-import { SuiJsonRpcClient, JsonRpcHTTPTransport } from "@mysten/sui/jsonRpc";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { sql } from "../src/server/db";
 import { env } from "../src/server/env";
 import { TATUM_SUI_JSONRPC } from "../src/server/tatum";
@@ -158,21 +158,12 @@ async function main() {
 
   // Live payment execution
   console.log(`\nSigning and broadcasting live payment from ${senderAddress}...`);
-  const client = new SuiJsonRpcClient({
-    network: "mainnet",
-    transport: new JsonRpcHTTPTransport({
-      url: TATUM_SUI_JSONRPC,
-      rpc: { headers: { "x-api-key": env.TATUM_API_KEY } },
-    }),
-  });
-
-  const execution = await client.signAndExecuteTransaction({
-    transaction: tx,
-    signer,
-    options: { showEffects: true },
-  });
-
-  const digest = execution.digest;
+  const client = new SuiGrpcClient({ network: "mainnet", baseUrl: "https://fullnode.mainnet.sui.io:443" });
+  const r = (await client.signAndExecuteTransaction({ transaction: tx, signer, include: { effects: true } })) as any;
+  if (r.FailedTransaction) throw new Error(`Payment rejected: ${JSON.stringify(r.FailedTransaction.status)}`);
+  const digest = (r.Transaction ?? r).digest as string;
+  // The server reads the payment through Tatum; give the checkpoint a moment to land there.
+  await new Promise((res) => setTimeout(res, 6000));
   console.log(`Payment confirmed on Sui mainnet. Digest: ${digest}`);
 
   // Step 3: Retry request with X-PAYMENT header
