@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Gates } from "@/components/tally/Gates";
 
 /**
  * One face, everywhere.
@@ -38,7 +39,10 @@ export default function RootLayout({
       lang="en"
       className={`${generalSans.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-plane text-ink">{children}</body>
+      <body className="flex min-h-full flex-col bg-plane text-ink">
+        {children}
+        <Gates />
+      </body>
     </html>
   );
 }

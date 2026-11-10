@@ -16,7 +16,8 @@
     "spike:seal": "tsx --env-file=.env.local scripts/spike-seal.ts",
     "spike:walrus": "tsx --env-file=.env.local scripts/spike-walrus.ts",
     "spike:polymarket": "tsx --env-file=.env.local scripts/spike-polymarket.ts",
-    "standings:rebuild": "tsx --env-file=.env.local scripts/rebuild-standings.ts"
+    "standings:rebuild": "tsx --env-file=.env.local scripts/rebuild-standings.ts",
+    "agent:client": "tsx --env-file=.env.local scripts/agent-client.ts"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.7",
@@ -24,11 +25,8 @@
     "@mysten/seal": "1.5.4",
     "@mysten/sui": "2.39.1",
     "@mysten/walrus": "1.2.39",
-    "@neon/config": "^1.13.0",
-    "@neon/env": "^2.1.0",
     "@neondatabase/serverless": "1.2.0",
     "@protobuf-ts/grpc-transport": "^2.11.1",
-    "ai": "7.0.165",
     "clsx": "^2.1.1",
     "next": "16.2.10",
     "react": "19.2.4",
@@ -46,7 +44,6 @@
     "tailwindcss": "^4",
     "tsx": "4.23.15",
     "typescript": "^5",
-    "vite": "^8.3.6",
     "vitest": "5.1.0"
   }
 }

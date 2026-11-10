@@ -121,7 +121,7 @@ function MenuToggle({
       onClick={onToggle}
       aria-expanded={open}
       aria-label={open ? "Close menu" : "Open menu"}
-      className={`relative -ml-2 h-10 w-10 shrink-0 rounded-full ${className}`}
+      className={`relative -ml-2 h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 rounded-full ${className}`}
     >
       <span
         className={`${bar} ${open ? "top-1/2 -translate-y-1/2 rotate-45" : "top-[calc(50%-5px)] -translate-y-1/2"}`}
@@ -201,7 +201,7 @@ function NavLink({
   onDark?: boolean;
 }) {
   const active = pathname === href;
-  const base = "whitespace-nowrap text-[13px] font-medium transition-colors";
+  const base = "whitespace-nowrap text-[13px] font-medium transition-colors min-h-[44px] inline-flex items-center";
 
   if (active) return <Link href={href} className={`${base} text-lime`}>{label}</Link>;
 

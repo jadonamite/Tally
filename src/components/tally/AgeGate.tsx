@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
-export function AgeGate({ theme }: { theme: "light" | "dark" }) {
+export function AgeGate({ theme = "dark" }: { theme?: "light" | "dark" }) {
   const [state, setState] = useState<"loading" | "ok" | "blocked" | "unknown">("loading");
   const [dob, setDob] = useState("");
   const [error, setError] = useState<string | null>(null);
