@@ -32,6 +32,20 @@ Every Sui seal is read back through Tatum's Sui gateway to get its checkpoint, i
 
 For Polymarket wallets, the trade's Polygon transaction is the seal. Tally reads its block time through Tatum's Polygon RPC (`eth_getTransactionByHash`, then `eth_getBlockByNumber`) and compares it with the market's start.
 
+## Agents can pay for a record
+
+An agent can request a voice's sealed record and Walrus Memory verdict through `GET /api/agent/voices/<id>/record`.
+
+With no payment, the endpoint answers HTTP 402 with the required price and recipient address (x402). The agent pays 0.01 native USDC on Sui mainnet and sends the transaction digest in the `X-PAYMENT` header. Tally reads the transaction through Tatum's Sui gRPC gateway, checking recipient, amount, coin type, that the transaction is under 10 minutes old, and that the digest was never used before. A second use of the same payment is refused. Each paid request writes a memory to Walrus in that voice's namespace.
+
+A settled transaction on Sui mainnet where an agent paid 0.01 USDC and received SineNooneEI's record: https://suiscan.xyz/mainnet/tx/GB5fQhorBM4SJRzNS4yK8vA15WtykDKxK4upRT929iVx
+
+To run the client:
+
+```bash
+npm run agent:client
+```
+
 ## See it on the live system
 
 - A sealed call: https://tally.namite.xyz/app/call/c_c1ce2f7943a5ba3d
@@ -73,6 +87,8 @@ npm test
 | `EXAMPLE_USER_ID` | `src/server/views.ts`, `src/server/uid.ts` | Owner of the example board new visitors see |
 | `OPERATOR_KEY` | `src/server/uid.ts`, `src/app/api/operator/route.ts` | Lets one browser act as the example board's owner |
 | `ODDS_API_KEY` | `src/server/odds.ts` | The Odds API key; without it no bookmaker comparison is shown |
+| `AGENT_PAY_TO` | `src/app/api/agent/voices/[id]/record/route.ts` | Sui address that receives agent USDC payments |
+| `AGENT_CLIENT_KEY` | `scripts/agent-client.ts` | Sui private key used by the agent client to sign payments |
 
 ## Layout
 
