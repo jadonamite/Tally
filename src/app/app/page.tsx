@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { MarketsIcon, PortfolioIcon, YouIcon, SunIcon, MoonIcon } from "@/components/icons";
+import { MarketsIcon, PortfolioIcon, YouIcon, SunIcon, MoonIcon, SportsIcon } from "@/components/icons";
 import { useTheme } from "@/components/tally/useTheme";
 import { CallCard } from "@/components/tally/CallCard";
 import { AddCallSheet } from "@/components/tally/AddCallSheet";
+import { OddsBoard } from "@/components/tally/OddsBoard";
 import { Chip } from "@/components/tally/Chip";
 import { api } from "@/lib/api";
 import type { CallView, VoiceView, UserScorecard, MemoryHit } from "@/lib/types";
 import { STANDING_LABEL, walrusBlobUrl, short, perDollar } from "@/lib/format";
 import { recordLine } from "@/lib/core/standing";
 
-type Tab = "calls" | "voices" | "you";
+type Tab = "calls" | "voices" | "you" | "odds";
 const eyebrow = "font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)";
 const title = "mt-2 mb-5 text-2xl font-bold tracking-[-0.03em] md:text-3xl";
 
@@ -81,7 +82,7 @@ export default function AppHome() {
 
         {/* Desktop Tab Switcher */}
         <nav className="hidden items-center gap-1 rounded-full border border-(--s-line) bg-(--s-card) p-1 md:flex">
-          {([["calls", "Calls", MarketsIcon], ["voices", "Voices", PortfolioIcon], ["you", "You", YouIcon]] as const).map(([id, label, Icon]) => (
+          {([["calls", "Calls", MarketsIcon], ["voices", "Voices", PortfolioIcon], ["you", "You", YouIcon], ["odds", "Odds", SportsIcon]] as const).map(([id, label, Icon]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -166,6 +167,7 @@ export default function AppHome() {
 
         {tab === "voices" && <VoicesTab voices={voices} onChange={load} />}
         {tab === "you" && <YouTab />}
+        {tab === "odds" && <OddsBoard now={now} />}
       </div>
 
       {/* Mobile Floating Action Button */}
@@ -178,7 +180,7 @@ export default function AppHome() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed inset-x-0 bottom-0 z-10 mx-auto flex max-w-md border-t border-(--s-line) bg-(--s-bg-blur) backdrop-blur md:hidden">
-        {([["calls", "Calls", MarketsIcon], ["voices", "Voices", PortfolioIcon], ["you", "You", YouIcon]] as const).map(([id, label, Icon]) => (
+        {([["calls", "Calls", MarketsIcon], ["voices", "Voices", PortfolioIcon], ["you", "You", YouIcon], ["odds", "Odds", SportsIcon]] as const).map(([id, label, Icon]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
