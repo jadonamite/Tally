@@ -1,0 +1,76 @@
+[
+  {
+    "_fixture": "hand-written to the documented v4 shape, not a recording",
+    "id": "e8574d6c7b9148b18f8e97491cf2c3aa",
+    "sport_key": "basketball_nba",
+    "sport_title": "NBA",
+    "commence_time": "2026-11-12T01:00:00Z",
+    "home_team": "Houston Rockets",
+    "away_team": "Denver Nuggets",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-11-10T12:00:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-11-10T12:00:00Z",
+            "outcomes": [
+              {
+                "name": "Denver Nuggets",
+                "price": 1.90
+              },
+              {
+                "name": "Houston Rockets",
+                "price": 1.90
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-11-10T12:00:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-11-10T12:00:00Z",
+            "outcomes": [
+              {
+                "name": "Denver Nuggets",
+                "price": 1.60
+              },
+              {
+                "name": "Houston Rockets",
+                "price": 2.40
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pinnacle",
+        "title": "Pinnacle",
+        "last_update": "2026-11-10T12:00:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-11-10T12:00:00Z",
+            "outcomes": [
+              {
+                "name": "Denver Nuggets",
+                "price": 1.70
+              },
+              {
+                "name": "Houston Rockets",
+                "price": 2.20
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

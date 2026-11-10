@@ -1,0 +1,63 @@
+[
+  {
+    "_fixture": "hand-written to the documented v4 shape, not a recording",
+    "id": "c194bb284a123f81e3a9a149cbf1092a",
+    "sport_key": "soccer_epl",
+    "sport_title": "EPL",
+    "commence_time": "2026-11-12T15:00:00Z",
+    "home_team": "Arsenal",
+    "away_team": "Chelsea",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-11-10T12:00:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-11-10T12:00:00Z",
+            "outcomes": [
+              {
+                "name": "Arsenal",
+                "price": 2.00
+              },
+              {
+                "name": "Chelsea",
+                "price": 4.00
+              },
+              {
+                "name": "Draw",
+                "price": 3.33333333
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-11-10T12:00:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-11-10T12:00:00Z",
+            "outcomes": [
+              {
+                "name": "Arsenal",
+                "price": 1.95
+              },
+              {
+                "name": "Chelsea",
+                "price": 4.20
+              },
+              {
+                "name": "Draw",
+                "price": 3.40
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
