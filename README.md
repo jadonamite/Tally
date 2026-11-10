@@ -1,93 +1,86 @@
 # Tally
 
-Tally shows you which tipsters actually beat the odds, graded on what they said before kickoff.
+Tally learns which tipsters to trust. You forward any call you are shown, Tally seals it before kickoff, and Walrus Memory keeps a credibility score for that voice that the app reads back every time they call again.
 
 Live app: https://tally.namite.xyz
 
-## How It Works
+## How it works
 
-1. **Capture:** You forward or paste any call: a Telegram tip, an X post, or follow a Polymarket wallet.
-2. **Seal on Sui:** Tally computes a canonical SHA-256 hash of the call and records a transaction on Sui mainnet before the market starts. The checkpoint timestamp proves the call existed before kickoff. For Polymarket wallets, the Polygon trade timestamp is the verified on-chain seal.
-3. **Store in Walrus Memory:** Every sealed call, grade, and standing change is archived as an encrypted semantic memory in Walrus Memory.
-4. **Grade against the price at kickoff:** When the event starts, Tally locks the market price at that exact second. When resolved, Tally grades the voice on two numbers: closing line value (did they beat the price at the start) and profit per dollar, never on raw win rate.
+You paste a tip from Telegram or X, or follow a Polymarket wallet. Tally calls each source a voice.
 
-## Proof
+When you add a call, Tally hashes it and writes the hash into a Sui mainnet transaction before the market starts. It then reads that transaction back through Tatum, and the call only counts if the checkpoint time is earlier than the start. A call sealed late is kept and shown as late, and it is never graded.
 
-A verified call from the live system:
-- Call page: https://tally.namite.xyz/app/call/c_c1ce2f7943a5ba3d
-- Sui seal: https://suiscan.xyz/mainnet/tx/CiLENPQ9LD4kMocSbrTgF3NMUgNANe1eW5G3mWo6HVs4 (checkpoint 343288920, sealed 5m 26s before market kickoff)
-- Walrus call memory: https://walruscan.com/mainnet/blob/Dc_WXFpqO79Epl9d4GAzlJVhpT-6Ahrd67ypFdMuhCg
-- Walrus grade memory: https://walruscan.com/mainnet/blob/vOy2M6HsAuH40JQ9jJJrYIDhSgutlJh-Fgj05HyfzBY
+At the start, Tally records the market price. When the market settles, it grades the call on two numbers: whether the voice got a better price than the market had at the start, and what $1 on the call would have returned. Win rate is not a score here, because backing 82¢ favourites wins four times in five and still loses money.
 
-## Why It Is Built This Way
+After every grade, Tally writes the voice's credibility score to Walrus Memory: how many sealed calls count, the average against the starting price, the return per $1, and the verdict. The app then recalls the newest credibility memory for each voice and uses that verdict to sort the feed, grey out voices that have not beaten the price, and suggest a stake for the ones that have. A voice with no credibility memory is shown as unproven.
 
-Win rate is a misleading metric in prediction markets. A caller who backs 82-cent heavy favourites can win 4 out of 5 calls (80% win rate) while yielding zero profit and negative closing value. Professional prediction scoring evaluates whether a caller consistently beats the closing market price before kickoff.
+Tally also remembers you. On any open call you can mark it as taken or passed. Each choice is a memory, and when the call is graded a second memory records how your choice turned out. The You tab recalls these and shows how following and passing has gone for each voice.
 
-A database row can be backdated; a blockchain checkpoint cannot. Tally anchors every call commitment on Sui mainnet before the start so nobody can alter predictions after observing the outcome.
+For sports markets, Tally sets the Polymarket price beside the bookmaker consensus (the median across bookmakers, with each bookmaker's margin removed) and flags the market when the two are 5 points or more apart.
 
-Grades and memory could live in a database; Walrus gives portable, encrypted, user-owned memory. The seal is the part a database can't do.
+## What lives where
 
-## Where Tatum Is Used
+Walrus Memory holds what Tally has learned: every call, every grade, every standing change, each voice's credibility score, and your own decisions. Each voice has its own namespace, and each memory's blob is linked from the screen that uses it.
 
-Tatum provides high-reliability blockchain RPC gateways:
-- Sui seal read-back: reads back seal transaction blocks via Tatum Sui gRPC to verify checkpoint timestamps and match call payload hashes on chain.
-- Polygon trade times: verifies block timestamps for imported Polymarket wallet trades (`eth_getTransactionByHash`).
+Sui holds the seal. The checkpoint time is the evidence that a call existed before the start.
 
-## Run It
+Postgres is the working index: it holds the rows the app sorts and joins, and each grade is computed there before it is written to memory.
 
-Prerequisites: Node.js 20+ (Node 24 recommended), npm.
+## Where Tatum is used
+
+Every Sui seal is read back through Tatum's Sui gateway to get its checkpoint, its timestamp and the hash inside it. The "Re-check the seal" button on a call page runs that read again live.
+
+For Polymarket wallets, the trade's Polygon transaction is the seal. Tally reads its block time through Tatum's Polygon RPC (`eth_getTransactionByHash`, then `eth_getBlockByNumber`) and compares it with the market's start.
+
+## See it on the live system
+
+- A sealed call: https://tally.namite.xyz/app/call/c_c1ce2f7943a5ba3d
+- Its seal on Sui, checkpoint 343288920, 5m 26s before the start: https://suiscan.xyz/mainnet/tx/CiLENPQ9LD4kMocSbrTgF3NMUgNANe1eW5G3mWo6HVs4
+- Its call memory: https://walruscan.com/mainnet/blob/Dc_WXFpqO79Epl9d4GAzlJVhpT-6Ahrd67ypFdMuhCg
+- Its grade memory: https://walruscan.com/mainnet/blob/vOy2M6HsAuH40JQ9jJJrYIDhSgutlJh-Fgj05HyfzBY
+- A credibility memory the app reads its verdict from (SineNooneEI, 39 sealed calls): https://walruscan.com/mainnet/blob/_FNjtmp428xMICJjSVf_ztMJyxLiAv4hL2n5-S5rjpc
+- The live count of memories on Walrus Mainnet: https://tally.namite.xyz/api/memory/stats
+
+## Run it
+
+Node.js 20 or newer.
 
 ```bash
-# Clone and install dependencies
 git clone https://github.com/jadonamite/Tally.git
 cd Tally
 npm install
-
-# Configure environment variables
-cp .env.example .env.local
-# Edit .env.local with your keys
-
-# Run database migrations
+cp .env.example .env.local   # fill in the values below
 npm run db:migrate
-
-# Start local development server
 npm run dev
-
-# Run automated background sweep loop
-npm run sweep:loop
-```
-
-Run test suite:
-
-```bash
+npm run sweep:loop           # locks, grades and writes memories every 20 seconds
 npm test
 ```
 
 ## Configuration
 
-| Variable | Read By | Description |
+| Variable | Read by | What it is |
 |---|---|---|
 | `DATABASE_URL` | `src/server/db.ts` | Neon Postgres pooled connection string |
-| `TATUM_API_KEY` | `src/server/tatum.ts` | Tatum API gateway key for Sui and Polygon RPC |
-| `MEMWAL_ACCOUNT_ID` | `src/server/memory.ts` | Walrus Memory account object ID |
+| `TATUM_API_KEY` | `src/server/tatum.ts` | Tatum key for Sui and Polygon reads |
+| `MEMWAL_ACCOUNT_ID` | `src/server/memory.ts` | Walrus Memory account object id |
 | `MEMWAL_PRIVATE_KEY` | `src/server/memory.ts` | Walrus Memory delegate private key |
-| `MEMWAL_SERVER_URL` | `src/server/memory.ts` | Walrus Memory relayer endpoint |
-| `SUI_SEAL_PRIVATE_KEY` | `src/server/sui.ts` | Ed25519 private key funding Sui seal transactions |
-| `SUI_EXECUTE_VIA` | `src/server/sui.ts` | `tatum` to execute through Tatum RPC or `public` for Sui fullnode |
-| `TATUM_SUI_READ` | `src/server/tatum.ts` | `jsonrpc` or `grpcweb` for reading transaction blocks |
-| `CRON_SECRET` | `src/app/api/cron/sweep/route.ts` | Bearer token authenticating `/api/cron/sweep` triggers |
-| `APP_URL` | `.github/workflows/sweep.yml` | Public application URL |
+| `MEMWAL_SERVER_URL` | `src/server/memory.ts` | Walrus Memory relayer |
+| `SUI_SEAL_PRIVATE_KEY` | `src/server/sui.ts` | Key of the address that pays for seals |
+| `SUI_EXECUTE_VIA` | `src/server/sui.ts` | `tatum` or `public`: where seal transactions are sent |
+| `TATUM_SUI_READ` | `src/server/tatum.ts` | `grpcweb` or `jsonrpc`: how seals are read back |
+| `CRON_SECRET` | `src/app/api/cron/sweep/route.ts` | Bearer token for the scheduled sweep |
+| `APP_URL` | `.github/workflows/sweep.yml` | Public URL the scheduled sweep calls |
+| `EXAMPLE_USER_ID` | `src/server/views.ts`, `src/server/uid.ts` | Owner of the example board new visitors see |
+| `OPERATOR_KEY` | `src/server/uid.ts`, `src/app/api/operator/route.ts` | Lets one browser act as the example board's owner |
+| `ODDS_API_KEY` | `src/server/odds.ts` | The Odds API key; without it no bookmaker comparison is shown |
 
 ## Layout
 
-- `src/app/`: Next.js App Router pages and API routes
-- `src/components/tally/`: UI components (cards, sheets, age gate, legal layout)
-- `src/lib/core/`: Pure arithmetic logic (grading, Kelly sizing, standings) and unit tests
-- `src/lib/`: Formatting helpers, types, and API client
-- `src/server/`: Server-only modules (database, Polymarket, Tatum, Sui, Walrus)
-- `scripts/`: CLI tools for key generation, migrations, dependency checks, and sweep execution
-- `db/`: Database schema definitions
-
----
+- `src/app/`: pages and API routes
+- `src/components/`: interface components
+- `src/lib/core/`: grading, standing, stake sizing and odds matching, with tests in `test/`
+- `src/server/`: Polymarket, Tatum, Sui, Walrus Memory, odds, capture, wallet import and the sweep
+- `scripts/`: key generation, migration and sweep runners
+- `db/`: schema
 
 Interface built from Binary's components.
