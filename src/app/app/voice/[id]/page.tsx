@@ -1,12 +1,12 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useTheme } from "@/components/tally/useTheme";
 import { CallCard } from "@/components/tally/CallCard";
 import { api } from "@/lib/api";
 import type { CallView, MemoryHit, VoiceView } from "@/lib/types";
-import { STANDING_LABEL, signedCents, perDollar, walrusBlobUrl, short } from "@/lib/format";
+import { STANDING_LABEL, signedCents, perDollar, walrusBlobUrl, short, utcTime } from "@/lib/format";
 
 export default function VoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -17,12 +17,16 @@ export default function VoicePage({ params }: { params: Promise<{ id: string }> 
   const [hits, setHits] = useState<MemoryHit[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     api.voice(id).then((r) => { setVoice(r.voice); setCalls(r.calls); }).catch(() => {});
+  }, [id]);
+
+  useEffect(() => {
+    reload();
     api.recall(id, "").then((r) => setHits(r.hits)).catch(() => setHits([]));
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [id]);
+  }, [id, reload]);
 
   const ask = () => { setHits(null); api.recall(id, q).then((r) => setHits(r.hits)).catch(() => setHits([])); };
 
@@ -34,6 +38,40 @@ export default function VoicePage({ params }: { params: Promise<{ id: string }> 
           <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">{voice.kind}</p>
           <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] md:text-4xl">{voice.displayName}</h1>
           <p className={`mt-1 text-lg font-semibold ${voice.standing === "earned" ? "text-(--s-win)" : voice.standing === "unproven" ? "text-(--s-sub)" : "text-(--s-lose)"}`}>{STANDING_LABEL[voice.standing]}</p>
+
+          {/* Verdict from Walrus Memory (A3) */}
+          <section className="mt-3 rounded-[22px] border border-(--s-line) bg-(--s-card) p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-(--s-text)">
+                Verdict from Walrus Memory:{" "}
+                <span className={voice.standing === "earned" ? "text-(--s-win)" : voice.standing === "unproven" ? "text-(--s-sub)" : "text-(--s-lose)"}>
+                  {STANDING_LABEL[voice.standing]}
+                </span>
+              </p>
+              {voice.credBlob && (
+                <a
+                  href={walrusBlobUrl(voice.credBlob)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono text-[11px] text-(--s-act) underline hover:opacity-80"
+                >
+                  blob {short(voice.credBlob, 6)}
+                </a>
+              )}
+            </div>
+            {voice.credWrittenAt && (
+              <p className="mt-1 font-mono text-[11px] text-(--s-sub)">
+                Remembered {utcTime(voice.credWrittenAt)} · Recalled {voice.credRecalledAt ? utcTime(voice.credRecalledAt) : "live"}
+              </p>
+            )}
+            {voice.ledgerStanding && (
+              <p className="mt-2 border-t border-(--s-line) pt-2 text-[11px] leading-relaxed text-(--s-sub)">
+                <span className="font-semibold text-(--s-text)">Ledger cross-check:</span> {voice.ledgerStanding.n} graded calls ({voice.ledgerStanding.won} won, {voice.ledgerStanding.lost} lost),{" "}
+                {signedCents(voice.ledgerStanding.meanBeatClose)} against price, {perDollar(voice.ledgerStanding.pnlPerBet)}. Ledger computes every grade; Walrus Memory decides who to trust on screen.
+              </p>
+            )}
+          </section>
+
           <div className="mt-4 grid grid-cols-3 gap-2 md:gap-4">
             {([[String(voice.n), "sealed calls graded"], [signedCents(voice.meanBeatClose), "vs the price"], [perDollar(voice.pnlPerBet).replace(" per $1", ""), "per $1 staked"]] as const).map(([v, l]) => (
               <div key={l} className="rounded-[22px] bg-(--s-card) p-4 md:p-6">
@@ -63,7 +101,9 @@ export default function VoicePage({ params }: { params: Promise<{ id: string }> 
           </section>
 
           <p className="mt-8 mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">Every sealed call</p>
-          <ul className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-3">{calls.map((c) => <CallCard key={c.id} call={c} now={now} />)}</ul>
+          <ul className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-3">
+            {calls.map((c) => <CallCard key={c.id} call={c} now={now} onDecisionChange={reload} />)}
+          </ul>
         </>
       )}
     </main>

@@ -41,8 +41,29 @@ export default function CallPage({ params }: { params: Promise<{ id: string }> }
               {call.sealRef && <Row k="Transaction" v={link(call.sealKind === "polygon" ? polygonTxUrl(call.sealRef) : suiTxUrl(call.sealRef), short(call.sealRef))} />}
               {call.sealCheckpoint && <Row k={call.sealKind === "polygon" ? "Block" : "Checkpoint"} v={call.sealCheckpoint} />}
               <Row k="Price at the start" v={cents(call.closePrice)} />
+              {call.bookmakerPrice !== null && (
+                <Row
+                  k="Bookmaker consensus"
+                  v={
+                    <span>
+                      {cents(call.bookmakerPrice)}
+                      {call.entryPrice !== null && Math.abs(call.entryPrice - call.bookmakerPrice) >= 0.05 && (
+                        <span className="ml-2 rounded-full bg-(--s-gold) px-2 py-0.5 text-[10px] font-bold text-black uppercase">
+                          5+ pt divergence
+                        </span>
+                      )}
+                    </span>
+                  }
+                />
+              )}
+              {call.bookmakerClose !== null && (
+                <Row k="Bookmaker at start" v={cents(call.bookmakerClose)} />
+              )}
               {call.result && <Row k="Result" v={call.result.toUpperCase()} />}
               {call.status === "graded" && <Row k="Against the price" v={signedCents(call.beatClose)} />}
+              {call.status === "graded" && call.bookmakerClose !== null && call.entryPrice !== null && (
+                <Row k="Against bookmaker line" v={signedCents(call.bookmakerClose - call.entryPrice)} />
+              )}
               {call.status === "graded" && <Row k="Profit" v={perDollar(call.pnlPerDollar)} />}
               {call.memCallBlob && <Row k="Memory (call)" v={link(walrusBlobUrl(call.memCallBlob), short(call.memCallBlob, 4))} />}
               {call.memGradeBlob && <Row k="Memory (grade)" v={link(walrusBlobUrl(call.memGradeBlob), short(call.memGradeBlob, 4))} />}

@@ -14,4 +14,9 @@ export const env = {
   get SUI_EXECUTE_VIA() { return (process.env.SUI_EXECUTE_VIA === "public" ? "public" : "tatum") as "tatum" | "public"; },
   get TATUM_SUI_READ() { return (process.env.TATUM_SUI_READ === "grpcweb" ? "grpcweb" : "jsonrpc") as "jsonrpc" | "grpcweb"; },
   get CRON_SECRET() { return req("CRON_SECRET"); },
+  get EXAMPLE_USER_ID() { return process.env.EXAMPLE_USER_ID || "e2e0000000000001"; },
+  get OPERATOR_KEY() { return process.env.OPERATOR_KEY || ""; },
+  get ODDS_API_KEY() { return process.env.ODDS_API_KEY || ""; },
+  get AGENT_PAY_TO() { return process.env.AGENT_PAY_TO || ""; },
+  get AGENT_CLIENT_KEY() { return process.env.AGENT_CLIENT_KEY || ""; },
 };

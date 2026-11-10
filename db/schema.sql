@@ -69,3 +69,60 @@ create table if not exists standings (
 );
 
 create index if not exists standings_by_voice on standings (voice_id, at desc);
+
+alter table calls add column if not exists lock_kind text check (lock_kind in ('start','end'));
+alter table calls add column if not exists tried_at timestamptz;
+alter table calls add column if not exists mem_retries int not null default 0;
+alter table calls add column if not exists mem_fix_job text;
+alter table calls add column if not exists mem_fix_blob text;
+alter table standings add column if not exists mem_retries int not null default 0;
+
+create table if not exists voice_memory (
+  voice_id        text primary key references voices(id),
+  standing        text check (standing in ('unproven','earned','not_earned','tombstoned')),
+  n               int,
+  mean_beat_close double precision,
+  pnl_per_bet     double precision,
+  won             int,
+  lost            int,
+  blob_id         text,
+  written_at      timestamptz,
+  recalled_at     timestamptz,
+  pending_job     text,
+  pending_key     text,
+  retries         int not null default 0
+);
+
+create table if not exists decisions (
+  user_id      text not null references users(id),
+  call_id      text not null references calls(id),
+  choice       text not null check (choice in ('take','pass')),
+  at           timestamptz not null default now(),
+  mem_job      text,
+  mem_blob     text,
+  outcome_job  text,
+  outcome_blob text,
+  primary key (user_id, call_id)
+);
+
+create index if not exists decisions_by_user on decisions (user_id, at desc);
+
+alter table calls add column if not exists bookmaker_price double precision;
+alter table calls add column if not exists bookmaker_close double precision;
+alter table calls add column if not exists bookmaker_source text;
+
+create table if not exists odds_cache (
+  sport_key  text primary key,
+  fetched_at timestamptz not null,
+  remaining  int,
+  payload    jsonb not null
+);
+
+create table if not exists agent_payments (
+  digest   text primary key,
+  voice_id text,
+  payer    text,
+  amount   bigint,
+  at       timestamptz default now()
+);
+

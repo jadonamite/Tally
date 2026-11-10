@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { MarketOption, MemoryHit, VoiceView } from "@/lib/types";
+import type { MarketOption, MemoryHit, VoiceView, OddsComparison } from "@/lib/types";
 import { api } from "@/lib/api";
-import { cents, timeUntil, utcTime, suiTxUrl, STANDING_LABEL } from "@/lib/format";
+import { cents, timeUntil, utcTime, suiTxUrl, STANDING_LABEL, walrusBlobUrl, short } from "@/lib/format";
 import { Sheet } from "./Sheet";
 
 const KINDS: [string, string][] = [["telegram", "Telegram"], ["x", "X"], ["other", "Somewhere else"], ["self", "Me"]];
@@ -22,6 +22,7 @@ export function AddCallSheet({ theme, voices, onClose, onSealed }: {
   const [markets, setMarkets] = useState<MarketOption[]>([]);
   const [market, setMarket] = useState<MarketOption | null>(null);
   const [side, setSide] = useState<0 | 1 | null>(null);
+  const [odds, setOdds] = useState<(OddsComparison & { slug: string }) | null>(null);
   const [memories, setMemories] = useState<MemoryHit[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,15 @@ export function AddCallSheet({ theme, voices, onClose, onSealed }: {
     api.recall(voiceId, market.question).then((r) => live && setMemories(r.hits)).catch(() => live && setMemories([]));
     return () => { live = false; };
   }, [voiceId, market]);
+
+  useEffect(() => {
+    if (!market) return;
+    let live = true;
+    api.oddsComparison(market.slug)
+      .then((r) => live && setOdds({ slug: market.slug, ...r }))
+      .catch(() => live && setOdds({ slug: market.slug, matched: false }));
+    return () => { live = false; };
+  }, [market]);
 
   const voice = voices.find((v) => v.id === voiceId);
 
@@ -133,13 +143,45 @@ export function AddCallSheet({ theme, voices, onClose, onSealed }: {
         </div>
       )}
 
+      {market && side !== null && odds?.slug === market.slug && odds.matched && odds.bookProbs && (
+        <div className="mt-3 rounded-2xl bg-(--s-card) p-3 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-semibold text-(--s-text)">
+              Bookmakers say {cents(odds.bookProbs[side])}. Polymarket says {cents(market.outcomes[side].price)}.
+            </span>
+            {odds.disagree && (
+              <span className="rounded-full bg-(--s-gold) px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-black">
+                {Math.round(odds.pointsApart ?? 0)} pts apart
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-(--s-sub)">Consensus of {odds.books} bookmakers, margin removed.</p>
+        </div>
+      )}
+
       {voice && market && (
         <div className="mt-5 rounded-[22px] bg-(--s-card) p-4">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-(--s-sub)">Tally remembers</p>
-          <p className="mt-1 text-sm">{voice.displayName}: {STANDING_LABEL[voice.standing]}</p>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-sm font-semibold">{voice.displayName}: {STANDING_LABEL[voice.standing]}</span>
+            {voice.credBlob && (
+              <a href={walrusBlobUrl(voice.credBlob)} target="_blank" rel="noreferrer" className="font-mono text-[11px] text-(--s-act) underline">
+                blob {short(voice.credBlob, 4)}
+              </a>
+            )}
+          </div>
           {memories === null && <p className="mt-2 text-sm text-(--s-sub)">Looking back…</p>}
           {memories?.length === 0 && <p className="mt-2 text-sm text-(--s-sub)">Nothing from this voice yet.</p>}
-          <ul className="mt-2 space-y-2">{memories?.slice(0, 3).map((m) => <li key={m.blobId} className="text-xs leading-relaxed text-(--s-sub)">{m.text}</li>)}</ul>
+          <ul className="mt-2 space-y-2">
+            {memories?.slice(0, 3).map((m) => (
+              <li key={m.blobId} className="text-xs leading-relaxed text-(--s-sub)">
+                {m.text}
+                <a href={walrusBlobUrl(m.blobId)} target="_blank" rel="noreferrer" className="ml-1 font-mono text-[11px] text-(--s-act) underline">
+                  blob {short(m.blobId, 4)}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

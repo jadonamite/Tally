@@ -43,11 +43,11 @@ export async function importWallet(userId: string, voiceId: string, max = 40): P
     await sql()`
       insert into calls (id, user_id, voice_id, source, raw_text, market_slug, condition_id, question, image,
         outcome_index, outcome_label, token_id, lock_at, captured_at, entry_price, canonical, call_hash,
-        seal_kind, seal_ref, sealed_at, seal_checkpoint, status)
+        seal_kind, seal_ref, sealed_at, seal_checkpoint, status, lock_kind)
       values (${id}, ${userId}, ${voiceId}, 'wallet', ${rawText}, ${m.slug}, ${m.conditionId}, ${m.question}, ${m.image},
         ${t.outcome_index}, ${outcome.label}, ${outcome.tokenId}, ${m.lockAt}, ${capturedAt}, ${t.price}, ${canonical},
         ${sha256(canonical)}, 'polygon', ${t.transaction_hash}, ${new Date(chain.timestampMs).toISOString()},
-        ${String(chain.block)}, ${status})
+        ${String(chain.block)}, ${status}, ${m.lockKind})
       on conflict (voice_id, condition_id, outcome_index) do nothing`;
     added++;
   }

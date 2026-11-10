@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readOutcome } from "@/lib/core/outcome";
-import { gradeCall } from "@/lib/core/grade";
+import { gradeCall, priceWasLive } from "@/lib/core/grade";
 import { halfKelly } from "@/lib/core/sizing";
 import { computeStanding, suggestedStake, type GradedRow } from "@/lib/core/standing";
+import { credMemory, parseCred, decisionMemory, decisionOutcomeMemory } from "@/server/memoryText";
 
 const row = (result: "won" | "lost", entry: number, close: number, i: number): GradedRow => {
   const g = gradeCall(entry, close, result);
@@ -76,5 +77,71 @@ describe("suggestedStake", () => {
   it("earned voice at 40c with +5c edge on $100", () => {
     const rows = Array.from({ length: 10 }, (_, i) => row(i % 2 ? "won" : "lost", 0.4, 0.45, i));
     expect(suggestedStake(computeStanding(rows), 0.4, 100)).toBe(2); // 2% cap
+  });
+});
+
+describe("lockKind and B1 grading", () => {
+  it("end market call grades on profit only with null beatClose", () => {
+    const g = gradeCall(0.5, null, "won");
+    expect(g.beatClose).toBeNull();
+    expect(g.pnlPerDollar).toBe(1.0);
+  });
+
+  it("computeStanding ignores null beatClose for mean beat calculation", () => {
+    const rows: GradedRow[] = [
+      { result: "won", beatClose: 0.06, pnlPerDollar: 1.0, gradedAtMs: 1 },
+      { result: "won", beatClose: null, pnlPerDollar: 1.0, gradedAtMs: 2 },
+      ...Array.from({ length: 8 }, (_, i) => ({ result: "lost" as const, beatClose: 0.02, pnlPerDollar: -1.0, gradedAtMs: i + 3 })),
+    ];
+    const s = computeStanding(rows);
+    expect(s.n).toBe(10);
+    expect(s.meanBeatClose).toBeDefined();
+    // 9 rows have beatClose: (0.06 + 8 * 0.02) / 9 = 0.22 / 9
+    expect(s.meanBeatClose).toBeCloseTo(0.22 / 9, 4);
+  });
+});
+
+describe("credibility and decision memory tags", () => {
+  it("credMemory formats and parseCred parses roundtrip", () => {
+    const text = credMemory("SineNooneEI", "v_7ef01b7f7493", {
+      standing: "earned",
+      n: 39,
+      meanBeatClose: 0.0005,
+      pnlPerBet: 0.19,
+      won: 24,
+      lost: 15,
+    });
+    expect(text).toContain("[tally:cred");
+    const parsed = parseCred(text);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.voiceId).toBe("v_7ef01b7f7493");
+    expect(parsed?.standing).toBe("earned");
+    expect(parsed?.n).toBe(39);
+    expect(parsed?.won).toBe(24);
+    expect(parsed?.lost).toBe(15);
+    expect(parsed?.meanBeatClose).toBeCloseTo(0.0005, 4);
+    expect(parsed?.pnlPerBet).toBeCloseTo(0.19, 2);
+  });
+
+  it("decisionMemory and decisionOutcomeMemory formats", () => {
+    const dec = decisionMemory("take", "Alpha Trader", "Will BTC reach 100k?", "Yes", 0.65, "c_123");
+    expect(dec).toContain("decided to follow");
+    expect(dec).toContain("[tally:decision call=c_123 choice=take]");
+
+    const out = decisionOutcomeMemory("take", "Alpha Trader", "Will BTC reach 100k?", "won", 0.54, "c_123");
+    expect(out).toContain("won");
+    expect(out).toContain("[tally:decision-outcome call=c_123 choice=take result=won]");
+  });
+});
+
+describe("priceWasLive", () => {
+  it("is false when the price at lock is already the result", () => {
+    expect(priceWasLive(0.001)).toBe(false);
+    expect(priceWasLive(0.999)).toBe(false);
+    expect(priceWasLive(null)).toBe(false);
+  });
+  it("is true for a normal kickoff price", () => {
+    expect(priceWasLive(0.45)).toBe(true);
+    expect(priceWasLive(0.9)).toBe(true);
   });
 });

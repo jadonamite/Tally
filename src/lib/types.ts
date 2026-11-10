@@ -18,6 +18,10 @@ export interface VoiceView extends StandingSummary {
   handle: string;
   displayName: string;
   openCalls: number;
+  credBlob: string | null;
+  credWrittenAt: string | null;
+  credRecalledAt: string | null;
+  ledgerStanding?: StandingSummary;
 }
 
 export interface CallView {
@@ -45,8 +49,15 @@ export interface CallView {
   beatClose: number | null;
   pnlPerDollar: number | null;
   suggestedStake: number;       // dollars, 0 unless the voice is earned
+  bookmakerPrice: number | null;
+  bookmakerClose: number | null;
+  bookmakerSource: string | null;
   memCallBlob: string | null;
   memGradeBlob: string | null;
+  memFixBlob: string | null;
+  credBlob: string | null;
+  userDecision: "take" | "pass" | null;
+  userDecisionBlob: string | null;
   callHash: string;
   canonical: string;
 }
@@ -63,4 +74,34 @@ export interface MemoryHit {
   text: string;
   blobId: string;
   createdAt: string | null;
+}
+
+export interface UserScorecard {
+  taken: { total: number; won: number; lost: number; pnl: number };
+  passed: { total: number; saved: number; missed: number };
+  backedVoices: Array<{ voiceId: string; displayName: string; count: number }>;
+}
+
+/** Bookmaker consensus beside the Polymarket price for one market. Index matches the market's outcomes. */
+export interface OddsComparison {
+  matched: boolean;
+  bookProbs?: [number, number];
+  books?: number;
+  polyPrices?: [number, number];
+  pointsApart?: number;
+  disagree?: boolean;
+  thin?: boolean;
+}
+
+export interface DisagreementItem {
+  slug: string;
+  question: string;
+  image: string | null;
+  lockAt: string;
+  outcomes: Array<{ label: string; price: number }>;
+  polyPrices: [number, number];
+  bookProbs: [number, number];
+  books: number;
+  pointsApart: number;
+  disagree: boolean;
 }

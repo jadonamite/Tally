@@ -2,13 +2,16 @@ import { getUid } from "@/server/uid";
 import { voicesFor } from "@/server/views";
 import { sql } from "@/server/db";
 import { newId } from "@/server/ids";
+import { env } from "@/server/env";
 export const dynamic = "force-dynamic";
 
 const KINDS = ["telegram", "x", "wallet", "self", "other"] as const;
 
 export async function GET() {
   const uid = await getUid();
-  return Response.json({ voices: await voicesFor(uid) });
+  const hasOwn = (await sql()`select 1 from voices where user_id = ${uid} limit 1`) as any[];
+  const isExample = !hasOwn.length && uid !== env.EXAMPLE_USER_ID;
+  return Response.json({ voices: await voicesFor(uid), isExampleBoard: isExample });
 }
 
 export async function POST(req: Request) {

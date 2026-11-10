@@ -1,12 +1,16 @@
 import { getUid } from "@/server/uid";
 import { callsFor } from "@/server/views";
 import { captureCall, CaptureError } from "@/server/capture";
+import { sql } from "@/server/db";
+import { env } from "@/server/env";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET() {
   const uid = await getUid();
-  return Response.json({ calls: await callsFor(uid) });
+  const hasOwn = (await sql()`select 1 from calls where user_id = ${uid} limit 1`) as any[];
+  const isExample = !hasOwn.length && uid !== env.EXAMPLE_USER_ID;
+  return Response.json({ calls: await callsFor(uid), isExampleBoard: isExample });
 }
 
 export async function POST(req: Request) {

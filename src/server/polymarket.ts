@@ -9,6 +9,10 @@ export interface PmMarket {
   image: string | null;
   closed: boolean;
   lockAt: string; // ISO
+  /** "start" when the market has a kickoff; "end" when the only time it has is when it closes. */
+  lockKind: "start" | "end";
+  sportsMarketType?: string | null;
+  gameStartTime?: string | null;
   outcomes: [{ label: string; tokenId: string; price: number }, { label: string; tokenId: string; price: number }];
 }
 
@@ -24,6 +28,7 @@ interface RawMarket {
   endDate?: string;
   eventStartTime?: string | null;
   gameStartTime?: string | null;
+  sportsMarketType?: string | null;
 }
 
 /** Gamma's time fields come in two formats; return ISO or null. */
@@ -44,7 +49,8 @@ export function normalize(raw: RawMarket): PmMarket | null {
     return null;
   }
   if (labels.length !== 2 || prices.length !== 2 || tokens.length !== 2) return null;
-  const lockAt = iso(raw.eventStartTime) ?? iso(raw.gameStartTime) ?? iso(raw.endDate);
+  const start = iso(raw.eventStartTime) ?? iso(raw.gameStartTime);
+  const lockAt = start ?? iso(raw.endDate);
   if (!lockAt) return null;
   return {
     slug: raw.slug,
@@ -53,6 +59,9 @@ export function normalize(raw: RawMarket): PmMarket | null {
     image: raw.image ?? null,
     closed: raw.closed ?? false,
     lockAt,
+    lockKind: start ? "start" : "end",
+    sportsMarketType: raw.sportsMarketType ?? null,
+    gameStartTime: start,
     outcomes: [
       { label: labels[0], tokenId: tokens[0], price: Number(prices[0]) },
       { label: labels[1], tokenId: tokens[1], price: Number(prices[1]) },
@@ -144,8 +153,16 @@ export interface WalletTrade {
   transaction_hash: string;
 }
 
-/** Most recent trades for a wallet (up to 200). */
-export async function walletTrades(wallet: string): Promise<WalletTrade[]> {
-  const res = await getJson<{ data?: WalletTrade[] }>(`${DATA}/trades?user=${wallet.toLowerCase()}&limit=200`);
-  return res.data ?? [];
+/** A wallet's trades, newest first, paging back up to `maxPages` pages of 200. */
+export async function walletTrades(wallet: string, maxPages = 10): Promise<WalletTrade[]> {
+  const out: WalletTrade[] = [];
+  for (let page = 0; page < maxPages; page++) {
+    const res = await getJson<{ data?: WalletTrade[]; has_more?: boolean }>(
+      `${DATA}/trades?user=${wallet.toLowerCase()}&limit=200&offset=${page * 200}`,
+    );
+    const rows = res.data ?? [];
+    out.push(...rows);
+    if (rows.length < 200 || res.has_more === false) break;
+  }
+  return out;
 }

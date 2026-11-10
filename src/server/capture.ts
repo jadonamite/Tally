@@ -4,6 +4,7 @@ import { marketBySlug, bestAsk } from "./polymarket";
 import { sealOnSui, waitForSeal, memoFor } from "./sui";
 import { rememberLater, namespaceFor } from "./memory";
 import { callMemory } from "./memoryText";
+import { compare, type OddsComparison } from "./odds";
 
 export class CaptureError extends Error {}
 
@@ -48,13 +49,18 @@ export async function captureCall(input: {
   });
   const hash = sha256(canonical);
 
+  const odds = await compare(market).catch(() => ({ matched: false }) as OddsComparison);
+  const bmPrice = odds.matched && !odds.thin ? (odds.bookProbs?.[input.outcomeIndex] ?? null) : null;
+  const bmSource = bmPrice === null ? null : `consensus of ${odds.books} bookmakers`;
+
   // Row first, so nothing is lost if the seal fails.
   await sql()`
     insert into calls (id, user_id, voice_id, source, raw_text, market_slug, condition_id, question, image,
-      outcome_index, outcome_label, token_id, lock_at, captured_at, entry_price, canonical, call_hash, seal_kind, status)
+      outcome_index, outcome_label, token_id, lock_at, captured_at, entry_price, canonical, call_hash, seal_kind, status, lock_kind,
+      bookmaker_price, bookmaker_source)
     values (${id}, ${input.userId}, ${voice.id}, 'paste', ${rawText}, ${market.slug}, ${market.conditionId}, ${market.question},
       ${market.image}, ${input.outcomeIndex}, ${outcome.label}, ${outcome.tokenId}, ${market.lockAt}, ${capturedAt},
-      ${entry}, ${canonical}, ${hash}, 'none', 'unsealed')`;
+      ${entry}, ${canonical}, ${hash}, 'none', 'unsealed', ${market.lockKind}, ${bmPrice}, ${bmSource})`;
 
   try {
     const digest = await sealOnSui(hash);
